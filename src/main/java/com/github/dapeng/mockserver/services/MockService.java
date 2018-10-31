@@ -3,10 +3,12 @@ package com.github.dapeng.mockserver.services;
 import com.github.dapeng.mockserver.entity.Mock;
 import com.github.dapeng.mockserver.entity.MockContext;
 import com.github.dapeng.mockserver.matchers.HttpRequestMatcher;
+import com.github.dapeng.mockserver.matchers.validator.JsonSchemaValidator;
 import com.github.dapeng.mockserver.repository.MockRepository;
 import com.github.dapeng.mockserver.request.HttpRequestContext;
 import com.github.dapeng.mockserver.util.Constants;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
@@ -51,9 +53,10 @@ public class MockService {
         return null;
     }
 
-    public void addMockInfo(String service, String method, String version, String mockExpress, String mockData) {
+    public void addMockInfo(String service, String method, String version, String mockExpress, String mockData) throws JSONException {
         String mockName = service + Constants.KEY_SEPARATE + method + Constants.KEY_SEPARATE + version;
-
+        JsonSchemaValidator.matcher(mockExpress);
+        JsonSchemaValidator.matcher(mockData);
         mockRepository.save(new Mock(mockName, HttpMethod.PUT.name(), mockExpress, mockData));
     }
 }
