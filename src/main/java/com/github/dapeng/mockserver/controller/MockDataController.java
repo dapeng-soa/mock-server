@@ -27,9 +27,9 @@ public class MockDataController {
 
     @PostMapping("/add")
     public ResponseEntity addMockData(String service, String method, String version,
-                                      String mockExpress, String mockData) {
+                                      String mockExpress, String mockData, int ordered) {
         try {
-            mockService.addMockInfo(service, method, version, mockExpress, mockData);
+            mockService.addMockInfo(service, method, version, mockExpress, mockData, ordered);
             return ResponseEntity.ok(Resp.of(RespEnum.OK));
         } catch (JSONException e) {
             log.error("Json Schema 解析失败，请检查格式: {}", e.getMessage());
