@@ -17,22 +17,26 @@ public class Mock {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column()
     private String name;
 
     @Column(name = "http_method")
     private String httpMethod;
 
-    @Column(name = "mock_express")
+    @Column(name = "mock_express", columnDefinition = "varchar(1024)")
     private String mockExpress;
 
-    @Column
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String data;
 
-    public Mock(String name, String httpMethod, String mockExpress, String data) {
+    @Column
+    private Integer ordered;
+
+    public Mock(String name, String httpMethod, String mockExpress, String data, Integer ordered) {
         this.name = name;
         this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
         this.data = data;
+        this.ordered = ordered;
     }
 }

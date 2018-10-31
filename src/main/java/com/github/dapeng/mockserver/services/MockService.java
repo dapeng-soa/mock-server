@@ -53,10 +53,11 @@ public class MockService {
         return null;
     }
 
-    public void addMockInfo(String service, String method, String version, String mockExpress, String mockData) throws JSONException {
+    public void addMockInfo(String service, String method, String version,
+                            String mockExpress, String mockData, int ordered) throws JSONException {
         String mockName = service + Constants.KEY_SEPARATE + method + Constants.KEY_SEPARATE + version;
         JsonSchemaValidator.matcher(mockExpress);
         JsonSchemaValidator.matcher(mockData);
-        mockRepository.save(new Mock(mockName, HttpMethod.PUT.name(), mockExpress, mockData));
+        mockRepository.save(new Mock(mockName, HttpMethod.PUT.name(), mockExpress, mockData, ordered));
     }
 }
