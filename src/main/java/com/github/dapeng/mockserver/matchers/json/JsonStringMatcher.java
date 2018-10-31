@@ -1,17 +1,14 @@
-package com.github.dapeng.mockserver.matchers;
+package com.github.dapeng.mockserver.matchers.json;
 
-import com.github.dapeng.mockserver.matchers.json.CustomJsonComparator;
-import com.github.dapeng.mockserver.request.RequestContext;
+import com.github.dapeng.mockserver.matchers.Matcher;
 import com.google.common.base.Strings;
-import com.google.gson.Gson;
-import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONCompare;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.JSONCompareResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 
 
 /**
@@ -20,25 +17,16 @@ import java.util.Map;
  */
 public class JsonStringMatcher implements Matcher<String> {
     private static final Logger LOGGER = LoggerFactory.getLogger(JsonStringMatcher.class);
-    private final Gson gson = new Gson();
-
     private final String matcher;
     private final MatchType matchType;
-
 
     public JsonStringMatcher(String matcher, MatchType matchType) {
         this.matcher = matcher;
         this.matchType = matchType;
     }
 
-
-    public enum FormatType {
-        JSON,
-        KEY
-    }
-
     @Override
-    public boolean matches(final RequestContext context, String matched) {
+    public boolean matches(final HttpServletRequest context, String matched) {
         boolean result = false;
         JSONCompareResult jsonCompareResult;
         try {
@@ -62,7 +50,6 @@ public class JsonStringMatcher implements Matcher<String> {
         } catch (Exception e) {
             LOGGER.error("Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.matcher, e.getMessage());
         }
-
         return result;
     }
 }

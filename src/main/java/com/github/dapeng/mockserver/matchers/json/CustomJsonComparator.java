@@ -146,26 +146,6 @@ public class CustomJsonComparator extends AbstractComparator {
         return jsonMap;
     }
 
-
-    /*
-
-                {
-                    "menu": {
-                        "id": "file",
-                        "value": "File",
-                        "popup": {
-                            "menuItem": [
-                                {
-                                    "value": "Close",
-                                    "onclick": "CloseDoc()"
-                                }
-                            ]
-                        }
-                    }
-               }
-
-
-     */
     @SuppressWarnings("rawtypes")
     private static void analysisJson(Object objJson, String parent, Map<String, Object> jsonMap, boolean putJson) throws JSONException {
         //如果obj为json数组
@@ -201,7 +181,6 @@ public class CustomJsonComparator extends AbstractComparator {
                 }
                 //如果key中是其他
                 else {
-
                     if (jsonMap.containsKey(parent + key) && jsonMap.get(parent + key) != null) {
                         Object oldValue = jsonMap.get(parent + key);
                         jsonMap.put(parent + key, Arrays.asList(oldValue, object));
@@ -215,11 +194,18 @@ public class CustomJsonComparator extends AbstractComparator {
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    private static void analysisJsonArray(JSONArray jsonArray, String parent, Map<String, Object> jsonMap, boolean putJson) throws JSONException {
+    /**
+     * @param jsonArray Json 数组对象
+     * @param parent    当前json key的父 key
+     * @param jsonMap   存储 嵌套 Json 键值对的 map
+     * @param putJson   形如: {"menu" : {"id":"2"}} 形式，if {@code false}。就不会存 menu为key 后面json串为 value的值
+     * @throws JSONException ex
+     */
+    private static void analysisJsonArray(JSONArray jsonArray, String parent,
+                                          Map<String, Object> jsonMap, boolean putJson) throws JSONException {
         String prefix = parent;
         for (int i = 0; i < jsonArray.length(); i++) {
-            analysisJson(jsonArray.get(i), /*i + "-" +*/ parent, jsonMap, putJson);
+            analysisJson(jsonArray.get(i), parent, jsonMap, putJson);
             parent = prefix;
         }
     }

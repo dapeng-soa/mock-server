@@ -15,4 +15,9 @@ spring:
       connection-test-query: SELECT 1
   jpa:
     show-sql: true
+  devtools:
+    restart:
+      enabled: true
+server:
+  port: 9000
 

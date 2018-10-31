@@ -1,4 +1,4 @@
-package com.github.dapeng.mockserver.matchers;
+package com.github.dapeng.mockserver.matchers.json;
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
