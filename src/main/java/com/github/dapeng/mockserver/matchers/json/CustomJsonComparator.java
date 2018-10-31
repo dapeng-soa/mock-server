@@ -1,13 +1,12 @@
 package com.github.dapeng.mockserver.matchers.json;
 
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.JSONCompareResult;
 import org.skyscreamer.jsonassert.comparator.AbstractComparator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -17,8 +16,8 @@ import static org.skyscreamer.jsonassert.comparator.JSONCompareUtil.*;
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
  * @since 2018-10-30 10:37 AM
  */
+@Slf4j
 public class CustomJsonComparator extends AbstractComparator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CustomJsonComparator.class);
     private final JSONCompareMode mode;
 
     public CustomJsonComparator(JSONCompareMode mode) {
@@ -115,7 +114,7 @@ public class CustomJsonComparator extends AbstractComparator {
                                 break;
                             }
                         } catch (JSONException e) {
-                            LOGGER.error(e.getMessage(), e);
+                            log.error(e.getMessage(), e);
                         }
                     }
                     if (!flag) {
@@ -124,13 +123,13 @@ public class CustomJsonComparator extends AbstractComparator {
 
                 } else {
                     compareValues(qualify(prefix, key), expectedValue, actualValue, result);
-                    LOGGER.info("result: {}", result.toString());
+                    log.info("result: {}", result.toString());
                 }
             } else {
                 result.missing(prefix, key);
             }
         }
-        LOGGER.info("end result: {}", result.toString());
+        log.info("end result: {}", result.toString());
     }
 
 

@@ -1,54 +1,57 @@
 package com.github.dapeng.mockserver.matchers.json;
 
 import com.github.dapeng.mockserver.matchers.Matcher;
+import com.github.dapeng.mockserver.request.HttpRequestContext;
 import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 import org.skyscreamer.jsonassert.JSONCompare;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.JSONCompareResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletRequest;
-
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
  * @since 2018-10-30 10:32 AM
  */
+@Slf4j
 public class JsonStringMatcher implements Matcher<String> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JsonStringMatcher.class);
-    private final String matcher;
+    /**
+     * 预期 Json 格式
+     */
+    private final String expectedJson;
     private final MatchType matchType;
 
-    public JsonStringMatcher(String matcher, MatchType matchType) {
-        this.matcher = matcher;
+    public JsonStringMatcher(String expectedJson, MatchType matchType) {
+        this.expectedJson = expectedJson;
         this.matchType = matchType;
     }
 
     @Override
-    public boolean matches(final HttpServletRequest context, String matched) {
+    public boolean matches(final HttpRequestContext context, String actualJson) {
         boolean result = false;
         JSONCompareResult jsonCompareResult;
         try {
-            if (Strings.isNullOrEmpty(matcher)) {
+            if (Strings.isNullOrEmpty(expectedJson)) {
                 result = true;
             } else {
                 JSONCompareMode jsonCompareMode = JSONCompareMode.LENIENT;
                 if (matchType == MatchType.STRICT) {
                     jsonCompareMode = JSONCompareMode.STRICT;
                 }
-                jsonCompareResult = JSONCompare.compareJSON(matcher, matched, new CustomJsonComparator(jsonCompareMode));
+                //                                       expectedStr, actualStr
+                jsonCompareResult = JSONCompare.compareJSON(expectedJson, actualJson, new CustomJsonComparator(jsonCompareMode));
 
                 if (jsonCompareResult.passed()) {
                     result = true;
                 }
 
                 if (!result) {
-                    LOGGER.warn("Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.matcher, jsonCompareResult.getMessage());
+                    log.warn("Failed to perform JSON match actual \"{}\" with expected \"{}\" because {}",
+                            actualJson, this.expectedJson, jsonCompareResult.getMessage());
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.matcher, e.getMessage());
+            log.error("Failed to perform JSON match actual \"{}\" with expected \"{}\" because {}",
+                    actualJson, this.expectedJson, e.getMessage());
         }
         return result;
     }

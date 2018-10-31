@@ -1,6 +1,9 @@
 package com.github.dapeng.mockserver.entity;
 
+import lombok.Data;
+
 import javax.persistence.*;
+
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
@@ -8,14 +11,17 @@ import javax.persistence.*;
  */
 @Entity
 @Table(name = "mock_data")
+@Data
 public class Mock {
-
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
     private String name;
+
+    @Column(name = "http_method")
+    private String httpMethod;
 
     @Column(name = "mock_express")
     private String mockExpress;
@@ -23,35 +29,10 @@ public class Mock {
     @Column
     private String data;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    public Mock(String name, String httpMethod, String mockExpress, String data) {
         this.name = name;
-    }
-
-    public String getMockExpress() {
-        return mockExpress;
-    }
-
-    public void setMockExpress(String mockExpress) {
+        this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public void setData(String data) {
         this.data = data;
     }
 }

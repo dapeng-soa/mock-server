@@ -5,7 +5,6 @@ import com.github.dapeng.openapi.utils.PostUtil;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Optional;
 
 /**
  * 1,2 两种形式是不带鉴权的请求形式
@@ -17,10 +16,10 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api")
-public class MockController {
+public class MockApiController {
     private final MockService mockService;
 
-    public MockController(MockService mockService) {
+    public MockApiController(MockService mockService) {
         this.mockService = mockService;
     }
 
