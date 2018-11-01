@@ -68,7 +68,7 @@ public class ApiController {
 
         log.info("请求service列表展示，当前服务实例为 {}");
 
-        return "api/service";
+        return "api/mock-method";
     }
 
     @RequestMapping(value = "method/{serviceName}/{version}/{methodName}", method = RequestMethod.GET)

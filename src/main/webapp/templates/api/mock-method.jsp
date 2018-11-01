@@ -60,6 +60,7 @@
         </ol>
     </div>
     <div class="row">
+        <%--左边导航栏--%>
         <div class="col-sm-3 col-md-3">
             <div class="list-group">
                 <c:forEach var="s" items="${services}">
@@ -78,6 +79,9 @@
                 </c:forEach>
             </div>
         </div>
+
+
+
         <div class="col-sm-9 col-md-9">
             <div class="page-header mt5">
                 <h1 class="mt5">${service.doc}
