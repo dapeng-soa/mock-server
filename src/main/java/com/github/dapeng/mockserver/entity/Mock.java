@@ -1,5 +1,6 @@
 package com.github.dapeng.mockserver.entity;
 
+import com.github.dapeng.mockserver.util.Constants;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -17,8 +18,17 @@ public class Mock {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column()
-    private String name;
+    @Column(name = "service")
+    private String serviceName;
+
+    @Column(name = "method")
+    private String methodName;
+
+    @Column(name = "version")
+    private String version;
+
+    @Column(name = "mock_key")
+    private String mockKey;
 
     @Column(name = "http_method")
     private String httpMethod;
@@ -32,11 +42,31 @@ public class Mock {
     @Column
     private Integer ordered;
 
-    public Mock(String name, String httpMethod, String mockExpress, String data, Integer ordered) {
-        this.name = name;
+    @Column(name = "service_id")
+    private Long serviceId;
+
+    public Mock(String serviceName, String methodName, String version, String httpMethod,
+                String mockExpress, String data, Integer ordered) {
+        this.serviceName = serviceName;
+        this.methodName = methodName;
+        this.version = version;
+        this.mockKey = serviceName + Constants.KEY_SEPARATE + methodName + Constants.KEY_SEPARATE + version;
         this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
         this.data = data;
         this.ordered = ordered;
+    }
+
+    public Mock(String serviceName, String methodName, String version, String httpMethod,
+                String mockExpress, String data, Integer ordered, Long serviceId) {
+        this.serviceName = serviceName;
+        this.methodName = methodName;
+        this.version = version;
+        this.mockKey = serviceName + Constants.KEY_SEPARATE + methodName + Constants.KEY_SEPARATE + version;
+        this.httpMethod = httpMethod;
+        this.mockExpress = mockExpress;
+        this.data = data;
+        this.ordered = ordered;
+        this.serviceId = serviceId;
     }
 }

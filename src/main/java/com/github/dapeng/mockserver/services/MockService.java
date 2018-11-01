@@ -2,9 +2,11 @@ package com.github.dapeng.mockserver.services;
 
 import com.github.dapeng.mockserver.entity.Mock;
 import com.github.dapeng.mockserver.entity.MockContext;
+import com.github.dapeng.mockserver.entity.MockServiceInfo;
 import com.github.dapeng.mockserver.matchers.HttpRequestMatcher;
 import com.github.dapeng.mockserver.matchers.validator.JsonSchemaValidator;
 import com.github.dapeng.mockserver.repository.MockRepository;
+import com.github.dapeng.mockserver.repository.MockServiceRepository;
 import com.github.dapeng.mockserver.request.HttpRequestContext;
 import com.github.dapeng.mockserver.util.Constants;
 import lombok.extern.slf4j.Slf4j;
@@ -24,15 +26,18 @@ import java.util.List;
 public class MockService {
 
     private final MockRepository mockRepository;
+    private final MockServiceRepository mockServiceRepository;
 
 
-    public MockService(MockRepository mockRepository) {
+    public MockService(MockRepository mockRepository, MockServiceRepository mockServiceRepository) {
         this.mockRepository = mockRepository;
+        this.mockServiceRepository = mockServiceRepository;
     }
 
     public List<Mock> findMockByName(String name) {
-        return mockRepository.findByName(name);
+        return mockRepository.findMockByServiceName(name);
     }
+
 
     public String mock(String serviceName, String version,
                        String methodName, String parameter, HttpServletRequest request) {
@@ -40,11 +45,11 @@ public class MockService {
         HttpRequestContext requestContext = new HttpRequestContext(serviceName, methodName, version, parameter, request);
         //获取 mock 数据
         String mockName = serviceName + Constants.KEY_SEPARATE + methodName + Constants.KEY_SEPARATE + version;
-        List<Mock> mocks = mockRepository.findByName(mockName);
+        List<Mock> mocks = mockRepository.findByMockKey(mockName);
         mocks.sort((mock, mock2) -> (int) (mock.getId() - mock2.getId()));
 
         for (Mock mock : mocks) {
-            MockContext mockContext = new MockContext(mock.getName(), mock.getMockExpress(), mock.getData());
+            MockContext mockContext = new MockContext(mock.getMockKey(), mock.getMockExpress(), mock.getData());
             boolean isMatch = new HttpRequestMatcher(requestContext, mockContext).matches();
             if (isMatch) {
                 return mockContext.getMockData();
@@ -55,9 +60,25 @@ public class MockService {
 
     public void addMockInfo(String service, String method, String version,
                             String mockExpress, String mockData, int ordered) throws JSONException {
-        String mockName = service + Constants.KEY_SEPARATE + method + Constants.KEY_SEPARATE + version;
         JsonSchemaValidator.matcher(mockExpress);
         JsonSchemaValidator.matcher(mockData);
-        mockRepository.save(new Mock(mockName, HttpMethod.PUT.name(), mockExpress, mockData, ordered));
+
+        MockServiceInfo serviceInfo = mockServiceRepository.findByServiceName(service);
+
+        if (serviceInfo == null) {
+            serviceInfo = mockServiceRepository.save(new MockServiceInfo(service));
+
+        }
+        mockRepository.save(new Mock(service, method, version, HttpMethod.POST.name(), mockExpress, mockData, ordered, serviceInfo.getId()));
+    }
+
+
+    public List<MockServiceInfo> findMockServiceList() {
+        return mockServiceRepository.findAll();
+    }
+
+
+    public List<Mock> findMockByServiceName(String serviceName) {
+        return mockRepository.findByMockKey(serviceName);
     }
 }

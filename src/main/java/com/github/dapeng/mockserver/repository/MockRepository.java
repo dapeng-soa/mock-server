@@ -2,6 +2,7 @@ package com.github.dapeng.mockserver.repository;
 
 import com.github.dapeng.mockserver.entity.Mock;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -11,5 +12,7 @@ import java.util.List;
  */
 public interface MockRepository extends JpaRepository<Mock, Long> {
 
-    List<Mock> findByName(String name);
+    List<Mock> findByMockKey(String name);
+
+    List<Mock> findMockByServiceName(String name);
 }

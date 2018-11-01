@@ -1,6 +1,7 @@
-package com.github.dapeng.mockserver.controller;
+package com.github.dapeng.mockserver.web.controller;
 
 import com.github.dapeng.mockserver.services.MockService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("mock")
+@Slf4j
 public class IndexController {
     private final MockService mockService;
 
@@ -18,10 +20,10 @@ public class IndexController {
         this.mockService = mockService;
     }
 
+
     @RequestMapping("{name}")
     public Object testMock(@PathVariable String name) {
 
         return mockService.findMockByName(name);
     }
-
 }

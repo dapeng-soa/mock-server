@@ -1,4 +1,4 @@
-package com.github.dapeng.mockserver.controller;
+package com.github.dapeng.mockserver.web.controller;
 
 import com.github.dapeng.mockserver.services.MockService;
 import com.github.dapeng.openapi.utils.PostUtil;

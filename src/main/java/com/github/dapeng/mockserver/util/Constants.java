@@ -6,4 +6,10 @@ package com.github.dapeng.mockserver.util;
  */
 public interface Constants {
     String KEY_SEPARATE = "-";
+
+    String SERVICE_EVENT_KAY = "events";
+    String SERVICE_VIRTUAL_KEY = "virtual";
+    String SERVICE_VIRTUAL_VAL = "true";
+    String SERVICE_GROUP_KEY = "group";
+    String SERVICE_GROUP_DEFAULT = "OtherService";
 }

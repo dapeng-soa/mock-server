@@ -1,4 +1,4 @@
-package com.github.dapeng.mockserver.controller;
+package com.github.dapeng.mockserver.web.controller;
 
 import com.github.dapeng.mockserver.services.MockService;
 import com.github.dapeng.mockserver.util.Resp;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/mock")
 @Slf4j
 public class MockDataController {
+
     private final MockService mockService;
 
     public MockDataController(MockService mockService) {
@@ -29,6 +30,7 @@ public class MockDataController {
     public ResponseEntity addMockData(String service, String method, String version,
                                       String mockExpress, String mockData, int ordered) {
         try {
+
             mockService.addMockInfo(service, method, version, mockExpress, mockData, ordered);
             return ResponseEntity.ok(Resp.of(RespEnum.OK));
         } catch (JSONException e) {

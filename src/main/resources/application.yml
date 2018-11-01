@@ -20,6 +20,16 @@ spring:
   devtools:
     restart:
       enabled: true
+  mvc:
+    view:
+      prefix: /templates/
+      suffix: .jsp
+    static-path-pattern: /**
+  resources:
+    static-locations: /static/
+
 server:
   port: 9000
+
+
 
