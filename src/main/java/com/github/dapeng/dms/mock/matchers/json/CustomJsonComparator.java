@@ -209,6 +209,15 @@ public class CustomJsonComparator extends AbstractComparator {
      * @param parent    当前json key的父 key
      * @param jsonMap   存储 嵌套 Json 键值对的 map
      * @param putJson   形如: {"menu" : {"id":"2"}} 形式，if {@code false}。就不会存 menu为key 后面json串为 value的值
+     *                  主要作用是，在对用户输入的 expectJson 表达式时，只会存具体的key value.
+     *                  {@code "{"order":{
+     *                  "detail":{
+     *                  "sales":"20"
+     *                  }
+     *                  }}"
+     *                  }
+     *                  如果putJson 为 false =>  ("order-detail-sales",20)
+     *                  如果为 true =>  ("order","{"detail":{"sales":"20"}")  ("order-detail",{"sales":"20"}})  ("order-detail-sales",20)
      * @throws JSONException ex
      */
     private static void analysisJsonArray(JSONArray jsonArray, String parent,
@@ -220,7 +229,9 @@ public class CustomJsonComparator extends AbstractComparator {
         }
     }
 
-
+    /**
+     * 转换 expectedValue 表达式 为 Rule 对象。
+     */
     private Rule convertValueToRules(Object expectedValue) {
         int mockRuleId = mockContext.getMockRuleId();
         return RuleTypeEnum.findRuleById(mockRuleId, expectedValue);
