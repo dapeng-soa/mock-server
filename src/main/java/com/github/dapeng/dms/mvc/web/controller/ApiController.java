@@ -5,9 +5,6 @@ import com.github.dapeng.core.metadata.Service;
 import com.github.dapeng.core.metadata.Struct;
 import com.github.dapeng.core.metadata.TEnum;
 import com.github.dapeng.dms.mvc.entity.Mock;
-import com.github.dapeng.dms.mvc.web.util.ServiceAnnotationsUtil;
-import com.github.dapeng.dms.mvc.web.util.ServiceJsonUtil;
-import com.github.dapeng.dms.mvc.web.vo.EventDto;
 import com.github.dapeng.dms.mvc.web.vo.MockServiceVo;
 import com.github.dapeng.json.OptimizedMetadata;
 import com.github.dapeng.dms.mvc.entity.MockServiceInfo;
@@ -73,22 +70,6 @@ public class ApiController {
         return "api/mock-method";
     }
 
-    @RequestMapping(value = "method/{serviceName}/{version}/{methodName}", method = RequestMethod.GET)
-    @Transactional(rollbackFor = Exception.class)
-    public String method(HttpServletRequest request, @PathVariable String serviceName, @PathVariable String version, @PathVariable String methodName) {
-        OptimizedMetadata.OptimizedService optimizedService = ServiceCache.getService(serviceName, version);
-        Method seleted = optimizedService.getMethodMap().get(methodName);
-        List<Method> methods = optimizedService.getService().getMethods();
-
-        Collections.sort(methods, Comparator.comparing(Method::getName));
-        List<EventDto> events = ServiceAnnotationsUtil.findEventsByMethod(seleted);
-
-        request.setAttribute("events", events);
-        request.setAttribute("service", optimizedService.getService());
-        request.setAttribute("methods", methods);
-        request.setAttribute("method", seleted);
-        return "api/method";
-    }
 
     @RequestMapping(value = "findmethod/{serviceName}/{version}/{methodName}", method = RequestMethod.GET)
     @ResponseBody
@@ -174,33 +155,6 @@ public class ApiController {
         return ServiceCache.getService(serviceName, version).getService();
     }
 
-    /**
-     * 解析枚举信息，转为Json格式
-     *
-     * @param serviceName 服务名
-     * @param version     版本号
-     * @return Json 字符串
-     * @author maple.lei
-     */
-    @RequestMapping(value = "enum/{serviceName}/{version}/jsonEnum", method = RequestMethod.GET)
-    @Transactional(rollbackFor = Exception.class)
-    @ResponseBody
-    public Object getEnumJson(@PathVariable String serviceName, @PathVariable String version) {
-        Service service = ServiceCache.getService(serviceName, version).getService();
-        Map<String, Object> stringObjectMap = ServiceJsonUtil.executeJson(service);
-        return stringObjectMap.get(ServiceJsonUtil.JSONOBJ);
-
-    }
-
-    @RequestMapping(value = "enum/{serviceName}/{version}/jsonEnumString", method = RequestMethod.GET)
-    @Transactional(rollbackFor = Exception.class)
-    @ResponseBody
-    public String getEnumJsonString(@PathVariable String serviceName, @PathVariable String version) {
-        Service service = ServiceCache.getService(serviceName, version).getService();
-        Map<String, Object> stringObjectMap = ServiceJsonUtil.executeJson(service);
-
-        return (String) stringObjectMap.get(ServiceJsonUtil.JSONSTR);
-    }
 
     /**
      * transfer Mock POJO to MockVo
