@@ -54,17 +54,16 @@ public class CustomJsonComparator extends AbstractComparator {
             } else if (expectedValue instanceof JSONObject) {
                 compareJSON(prefix, (JSONObject) expectedValue, (JSONObject) actualValue, result);
             } else if (!expectedValue.equals(actualValue)) {
-                result.fail(prefix, expectedValue, actualValue);
+                //Rule 表达式
+                //转换 expectedValues String => Rules
+                Rule expectedRule = convertValueToRules(expectedValue);
+                boolean compareResult = expectedRule.compareValues(actualValue);
+                //匹配失败，报错。
+                if (!compareResult) {
+                    result.fail(prefix, expectedValue, actualValue);
+                }
             }
-            //Rule 表达式
-        } else if (Rule.class.isAssignableFrom(expectedValue.getClass())) {
-            //转换 expectedValues String => Rules
-            Rule expectedRule = convertValueToRules(expectedValue);
-            boolean compareResult = expectedRule.compareValues(actualValue);
-            //匹配失败，报错。
-            if (!compareResult) {
-                result.fail(prefix, expectedValue, actualValue);
-            }
+
         } else {
             result.fail(prefix, expectedValue, actualValue);
         }

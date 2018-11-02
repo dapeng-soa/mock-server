@@ -43,7 +43,7 @@ public class JsonStringMatcherTest {
         System.out.println(matched);
         assertTrue(new JsonStringMatcher("{" +
                 "\"id\": \"file\"" + ",\"value\": \"Close\"" + "}"
-                , MatchType.ONLY_MATCHING_FIELDS).matches(null, matched));
+                , MatchType.ONLY_MATCHING_FIELDS).matches(null, null, matched));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class JsonStringMatcherTest {
         expectMap.put("menu-value", "File");
         expectMap.put("menu-popup-menuitem-value", "Close2");
 
-        assertTrue(new JsonStringMatcher(gson.toJson(expectMap), MatchType.ONLY_MATCHING_FIELDS).matches(null, matched));
+        assertTrue(new JsonStringMatcher(gson.toJson(expectMap), MatchType.ONLY_MATCHING_FIELDS).matches(null, null, matched));
     }
 
     @Test
@@ -115,6 +115,6 @@ public class JsonStringMatcherTest {
                 "}";
 
 
-        assertTrue(new JsonStringMatcher(JsonMatcherUtils.convertJson(expectJson), MatchType.ONLY_MATCHING_FIELDS).matches(null, matched));
+        assertTrue(new JsonStringMatcher(JsonMatcherUtils.convertJson(expectJson), MatchType.ONLY_MATCHING_FIELDS).matches(null, null, matched));
     }
 }
