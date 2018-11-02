@@ -1,8 +1,8 @@
 package com.github.dapeng.mockserver.json;
 
-import com.github.dapeng.mockserver.matchers.json.JsonStringMatcher;
-import com.github.dapeng.mockserver.matchers.json.MatchType;
-import com.github.dapeng.mockserver.matchers.json.JsonMatcherUtils;
+import com.github.dapeng.dms.mock.matchers.json.JsonStringMatcher;
+import com.github.dapeng.dms.mock.matchers.json.MatchType;
+import com.github.dapeng.dms.mock.matchers.json.JsonMatcherUtils;
 import com.google.gson.Gson;
 import org.junit.Test;
 
