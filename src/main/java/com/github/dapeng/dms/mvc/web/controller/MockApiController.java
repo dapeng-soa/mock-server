@@ -89,8 +89,11 @@ public class MockApiController {
             return mockJsonResp;
         }
         //2.获取元数据的假数据信息
-        return MetadataUtils.getServiceResponse(serviceName, methodName, version);
-        //3.
-//        return PostUtil.post(serviceName, version, methodName, parameter, request);
+        String metadataResp = MetadataUtils.getServiceResponse(serviceName, methodName, version);
+
+        if (metadataResp != null) {
+            return metadataResp;
+        }
+        return "Internal Server Error,Mock和元数据信息均不存在";
     }
 }

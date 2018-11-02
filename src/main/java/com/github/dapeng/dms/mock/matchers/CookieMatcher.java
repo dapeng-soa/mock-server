@@ -2,6 +2,7 @@ package com.github.dapeng.dms.mock.matchers;
 
 
 import com.github.dapeng.dms.mock.request.HttpRequestContext;
+import com.github.dapeng.dms.mvc.entity.MockContext;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.Cookie;
@@ -20,7 +21,7 @@ public class CookieMatcher implements Matcher<Cookie> {
     }
 
     @Override
-    public boolean matches(HttpRequestContext context, Cookie cookie) {
+    public boolean matches(HttpRequestContext context, MockContext mockContext, Cookie cookie) {
         Cookie[] actualValues = context.getCookies();
         boolean result = false;
         if (this.expectedCookies == null || this.expectedCookies.length == 0) {

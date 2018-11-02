@@ -1,6 +1,7 @@
 package com.github.dapeng.dms.mock.matchers;
 
 import com.github.dapeng.dms.mock.request.HttpRequestContext;
+import com.github.dapeng.dms.mvc.entity.MockContext;
 import lombok.extern.slf4j.Slf4j;
 import org.everit.json.schema.ValidationException;
 import org.everit.json.schema.loader.SchemaLoader;
@@ -14,7 +15,7 @@ import org.json.JSONObject;
 @Slf4j
 public class JsonSchemaMatcher implements Matcher<String> {
     @Override
-    public boolean matches(final HttpRequestContext context, String actualJson) {
+    public boolean matches(final HttpRequestContext context, MockContext mockContext, String actualJson) {
         boolean result = false;
         try {
             JSONObject actualJsonObject = new JSONObject(actualJson);

@@ -1,6 +1,7 @@
 package com.github.dapeng.dms.mock.matchers;
 
 import com.github.dapeng.dms.mock.request.HttpRequestContext;
+import com.github.dapeng.dms.mvc.entity.MockContext;
 import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,7 +21,7 @@ public class RegexStringMatcher implements Matcher<String> {
 
 
     @Override
-    public boolean matches(HttpRequestContext context, String matched) {
+    public boolean matches(HttpRequestContext context, MockContext mockContext, String matched) {
         return false;
     }
 

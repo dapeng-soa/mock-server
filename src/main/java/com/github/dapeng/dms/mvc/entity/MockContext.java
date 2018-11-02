@@ -9,15 +9,18 @@ import lombok.Data;
 @Data
 public class MockContext {
 
-    private String name;
+    private final String name;
 
-    private String expectedJson;
+    private final String expectedJson;
 
-    private String mockData;
+    private final String mockData;
 
-    public MockContext(String name, String expectedJson, String mockData) {
+    private final int mockRuleId;
+
+    public MockContext(String name, String expectedJson, String mockData, int mockRuleId) {
         this.name = name;
         this.expectedJson = expectedJson;
         this.mockData = mockData;
+        this.mockRuleId = mockRuleId;
     }
 }

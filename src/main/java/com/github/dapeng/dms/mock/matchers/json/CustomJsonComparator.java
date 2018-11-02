@@ -1,5 +1,8 @@
 package com.github.dapeng.dms.mock.matchers.json;
 
+import com.github.dapeng.dms.mock.matchers.rule.Rule;
+import com.github.dapeng.dms.mock.matchers.rule.RuleTypeEnum;
+import com.github.dapeng.dms.mvc.entity.MockContext;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,9 +22,11 @@ import static org.skyscreamer.jsonassert.comparator.JSONCompareUtil.*;
 @Slf4j
 public class CustomJsonComparator extends AbstractComparator {
     private final JSONCompareMode mode;
+    private final MockContext mockContext;
 
-    public CustomJsonComparator(JSONCompareMode mode) {
+    public CustomJsonComparator(JSONCompareMode mode, MockContext mockContext) {
         this.mode = mode;
+        this.mockContext = mockContext;
     }
 
     @Override
@@ -49,6 +54,15 @@ public class CustomJsonComparator extends AbstractComparator {
             } else if (expectedValue instanceof JSONObject) {
                 compareJSON(prefix, (JSONObject) expectedValue, (JSONObject) actualValue, result);
             } else if (!expectedValue.equals(actualValue)) {
+                result.fail(prefix, expectedValue, actualValue);
+            }
+            //Rule 表达式
+        } else if (Rule.class.isAssignableFrom(expectedValue.getClass())) {
+            //转换 expectedValues String => Rules
+            Rule expectedRule = convertValueToRules(expectedValue);
+            boolean compareResult = expectedRule.compareValues(actualValue);
+            //匹配失败，报错。
+            if (!compareResult) {
                 result.fail(prefix, expectedValue, actualValue);
             }
         } else {
@@ -92,8 +106,6 @@ public class CustomJsonComparator extends AbstractComparator {
      * @throws JSONException ex
      */
     protected void checkJsonObjectKeysExpectedInActual(String prefix, JSONObject expected, JSONObject actual, JSONCompareResult result) throws JSONException {
-
-
         Set<String> expectedKeys = getKeys(expected);
 
         Map<String, Object> allValuesJsonMap = analysisJson(actual);
@@ -207,5 +219,11 @@ public class CustomJsonComparator extends AbstractComparator {
             analysisJson(jsonArray.get(i), parent, jsonMap, putJson);
             parent = prefix;
         }
+    }
+
+
+    private Rule convertValueToRules(Object expectedValue) {
+        int mockRuleId = mockContext.getMockRuleId();
+        return RuleTypeEnum.findRuleById(mockRuleId, expectedValue);
     }
 }

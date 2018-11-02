@@ -36,6 +36,12 @@ public class Mock {
     @Column(name = "mock_express", columnDefinition = "varchar(1024)")
     private String mockExpress;
 
+    /**
+     * 匹配规则
+     */
+    @Column(name = "mock_rule", columnDefinition = "tinyint default 0")
+    private int mockRuleId;
+
     @Column(columnDefinition = "MEDIUMTEXT")
     private String data;
 

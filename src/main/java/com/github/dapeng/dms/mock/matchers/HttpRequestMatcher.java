@@ -80,7 +80,7 @@ public class HttpRequestMatcher {
             if (requestContext != null) {
 //                boolean methodMatches = Strings.isNullOrEmpty(request.getMethod()) || matches(requestContext, parameterMatcer, mockContext);
 //                boolean pathMatches = Strings.isNullOrEmpty(request.getPath().getValue()) || matches(context, pathMatcher, request.getPath());
-                boolean jsonParametersMatches = matches(requestContext, parameterMatcer, requestContext.getParameter());
+                boolean jsonParametersMatches = matches(requestContext, parameterMatcer, requestContext.getParameter(), mockContext);
 //                boolean bodyMatches = bodyMatches(context, request);
 //                boolean headersMatch = matches(context, headerMatcher, request.getHeaders());
 //                boolean cookiesMatch = matches(context, cookieMatcher, request.getCookies());
@@ -146,12 +146,12 @@ public class HttpRequestMatcher {
      * @param actual  实际数据
      * @return 匹配成功或者失败 {@code true or false}
      */
-    private <T> boolean matches(HttpRequestContext context, Matcher<T> matcher, T actual) {
+    private <T> boolean matches(HttpRequestContext context, Matcher<T> matcher, T actual, MockContext mockContext) {
         boolean result = false;
 
         if (matcher == null) {
             result = true;
-        } else if (matcher.matches(context, actual)) {
+        } else if (matcher.matches(context,mockContext, actual)) {
             result = true;
         }
         return result;

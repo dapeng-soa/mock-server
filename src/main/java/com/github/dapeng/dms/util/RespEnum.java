@@ -11,7 +11,8 @@ public enum RespEnum {
 
     OK(200, "OK"),
 
-    ERROR(500, "未知异常");
+    ERROR(500, "未知异常"),
+    RESPONSE_NULL(500, "Mock和元数据信息均不存在");
 
     private int code;
     private String msg;

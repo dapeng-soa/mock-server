@@ -1,6 +1,7 @@
 package com.github.dapeng.dms.mock.matchers;
 
 import com.github.dapeng.dms.mock.request.HttpRequestContext;
+import com.github.dapeng.dms.mvc.entity.MockContext;
 
 
 /**
@@ -10,8 +11,8 @@ import com.github.dapeng.dms.mock.request.HttpRequestContext;
 public interface Matcher<T> {
     /**
      * @param context 请求上下文
-     * @param actual       预期匹配规则
+     * @param actual  预期匹配规则
      * @return
      */
-    boolean matches(HttpRequestContext context, T actual);
+    boolean matches(HttpRequestContext context, MockContext mockContext, T actual);
 }

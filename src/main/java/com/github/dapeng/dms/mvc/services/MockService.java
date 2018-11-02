@@ -49,7 +49,8 @@ public class MockService {
         mocks.sort((mock, mock2) -> (int) (mock.getId() - mock2.getId()));
 
         for (Mock mock : mocks) {
-            MockContext mockContext = new MockContext(mock.getMockKey(), mock.getMockExpress(), mock.getData());
+            MockContext mockContext = new MockContext(mock.getMockKey(), mock.getMockExpress(),
+                    mock.getData(), mock.getMockRuleId());
             boolean isMatch = new HttpRequestMatcher(requestContext, mockContext).matches();
             if (isMatch) {
                 return mockContext.getMockData();

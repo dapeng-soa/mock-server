@@ -2,6 +2,7 @@ package com.github.dapeng.dms.mock.matchers.json;
 
 import com.github.dapeng.dms.mock.matchers.Matcher;
 import com.github.dapeng.dms.mock.request.HttpRequestContext;
+import com.github.dapeng.dms.mvc.entity.MockContext;
 import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.skyscreamer.jsonassert.JSONCompare;
@@ -26,7 +27,7 @@ public class JsonStringMatcher implements Matcher<String> {
     }
 
     @Override
-    public boolean matches(final HttpRequestContext context, String actualJson) {
+    public boolean matches(final HttpRequestContext context, MockContext mockContext, String actualJson) {
         boolean result = false;
         JSONCompareResult jsonCompareResult;
         try {
@@ -38,7 +39,7 @@ public class JsonStringMatcher implements Matcher<String> {
                     jsonCompareMode = JSONCompareMode.STRICT;
                 }
                 //                                       expectedStr, actualStr
-                jsonCompareResult = JSONCompare.compareJSON(expectedJson, actualJson, new CustomJsonComparator(jsonCompareMode));
+                jsonCompareResult = JSONCompare.compareJSON(expectedJson, actualJson, new CustomJsonComparator(jsonCompareMode, mockContext));
 
                 if (jsonCompareResult.passed()) {
                     result = true;

@@ -31,6 +31,9 @@ public class MetadataUtils {
 
     public static String getServiceResponse(String serviceName, String methodName, String version) {
         OptimizedMetadata.OptimizedService service = ServiceCache.getService(serviceName, version);
+        if (service == null) {
+            return null;
+        }
         return MetadataUtils.getMethodResponseJson(service, serviceName, version, methodName);
     }
 
