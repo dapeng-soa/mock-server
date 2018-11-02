@@ -23,7 +23,6 @@ public class HttpRequestMatcher {
 
     private CookieMatcher cookieMatcher = null;
     private JsonStringMatcher parameterMatcer = null;
-    private RegexStringMatcher pathMatcher = null;
 
 
     public HttpRequestMatcher(HttpRequestContext requestContext,
@@ -33,8 +32,6 @@ public class HttpRequestMatcher {
         this.mockContext = mockContext;
         //
 //        withMethod(requestContext.getMethod());
-        //
-        withPath(requestContext.getPath());
         // expected
         withJsonParameters(mockContext.getExpectedJson());
         //
@@ -43,10 +40,6 @@ public class HttpRequestMatcher {
         withCookies(requestContext.getCookies());
     }
 
-
-    private void withPath(String path) {
-        this.pathMatcher = new RegexStringMatcher(path);
-    }
 
     private void withJsonParameters(String expectedParameter) {
         this.parameterMatcer = new JsonStringMatcher(JsonMatcherUtils.convertJson(expectedParameter), MatchType.ONLY_MATCHING_FIELDS);
@@ -151,7 +144,7 @@ public class HttpRequestMatcher {
 
         if (matcher == null) {
             result = true;
-        } else if (matcher.matches(context,mockContext, actual)) {
+        } else if (matcher.matches(context, mockContext, actual)) {
             result = true;
         }
         return result;

@@ -8,7 +8,7 @@ import lombok.Getter;
  */
 @Getter
 public enum RuleTypeEnum {
-    NOTHING(0, "NOTHING"),
+    STRING(0, "STRING"),
     REGEX(1, "REGEX");
 
     private int id;

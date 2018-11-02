@@ -39,7 +39,8 @@ public class JsonStringMatcher implements Matcher<String> {
                     jsonCompareMode = JSONCompareMode.STRICT;
                 }
                 //                                       expectedStr, actualStr
-                jsonCompareResult = JSONCompare.compareJSON(expectedJson, actualJson, new CustomJsonComparator(jsonCompareMode, mockContext));
+                jsonCompareResult = JSONCompare.compareJSON(expectedJson, actualJson,
+                        new CustomJsonComparator(jsonCompareMode, mockContext));
 
                 if (jsonCompareResult.passed()) {
                     result = true;
