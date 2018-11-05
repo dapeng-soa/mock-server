@@ -7,4 +7,6 @@ package com.github.dapeng.dms.mock.matchers.rule;
 public interface Rule {
 
     boolean compareValues(Object actualValue);
+
+
 }

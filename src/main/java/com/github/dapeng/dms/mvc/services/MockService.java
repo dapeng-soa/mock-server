@@ -82,7 +82,7 @@ public class MockService {
             serviceInfo = mockServiceRepository.save(new MockServiceInfo(service, new Timestamp(System.currentTimeMillis())));
         }
         String mockKey = MockUtils.combineMockKey(service, method, version);
-        Mock latestMock = mockRepository.findMockByMockKeyAndGroupNextNo(mockKey, 0L);
+        Mock latestMock = mockRepository.findMockByMockKeyAndNextNo(mockKey, 0L);
 
         if (latestMock != null) {
             Mock newMock = new Mock(service, method, version,
@@ -113,8 +113,7 @@ public class MockService {
     public List<Mock> findMockDataByMockKey(String service, String method, String version) {
         String mockKey = MockUtils.combineMockKey(service, method, version);
         List<Mock> mocks = mockRepository.findMockByMockKey(mockKey);
-        mockListSort(mocks);
-        return mocks;
+        return mockListSort(mocks);
     }
 
     /**
@@ -126,22 +125,45 @@ public class MockService {
         //todo 校验 front 再 below 上面
         List<Mock> mocks = mockRepository.findMockByMockKey(frontMock.getMockKey());
         mockListSort(mocks);
-        System.out.println(mocks);
 
+        Mock frontMockBef = mocks.get(mocks.indexOf(frontMock) - 1);
+        Mock frontMockAf = mocks.get(mocks.indexOf(frontMock) + 1);
+
+        Mock belowMockBef = mocks.get(mocks.indexOf(belowMock) - 1);
+        Mock belowMockAf = mocks.get(mocks.indexOf(belowMock) + 1);
+        //front前的mock 的 nextNo 为 below 的 id
+        frontMockBef.setNextNo(belowMock.getId());
+        //below prevNo
+        belowMock.setPrevNo(frontMockBef.getId());
+        // front prevNo
+        frontMock.setPrevNo(belowMock.getId());
+
+
+        belowMock.setNextNo(frontMock.getId());
+
+        //below
+        belowMockBef.setNextNo(belowMockAf.getId());
+        belowMockAf.setPrevNo(belowMockBef.getId());
     }
 
-    public static void mockListSort(List<Mock> data) {
+    public static List<Mock> mockListSort(List<Mock> data) {
         int next = 0;
         data.sort((o1, o2) -> (int) (o1.getPrevNo() - o2.getPrevNo()));
         List<Long> mockIdList = data.stream().map(Mock::getId).collect(Collectors.toList());
 
         List<Mock> result = new ArrayList<>();
 
+        int size = data.size();
+
         while (next != -1) {
             Mock cur = data.get(next);
             result.add(cur);
             next = mockIdList.indexOf(cur.getNextNo());
+            if (result.size() > size) {
+                break;
+            }
         }
+        return result;
     }
 
 }

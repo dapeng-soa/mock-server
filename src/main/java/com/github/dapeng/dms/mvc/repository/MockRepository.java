@@ -13,7 +13,7 @@ public interface MockRepository extends JpaRepository<Mock, Long> {
 
     List<Mock> findMockByMockKey(String name);
 
-    Mock findMockByMockKeyAndGroupNextNo(String mockKey, long nextNo);
+    Mock findMockByMockKeyAndNextNo(String mockKey, long nextNo);
 
     List<Mock> findMockByServiceName(String name);
 }
