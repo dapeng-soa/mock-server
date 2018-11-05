@@ -23,11 +23,12 @@ public class MockVo {
 
     private String data;
 
-    private Integer ordered;
+    private long preNo;
+    private long nextNo;
 
     public MockVo(String service, String simpleName, String method,
                   String version, String httpMethod, String mockExpress,
-                  String data, Integer ordered) {
+                  String data, long preNo, long nextNo) {
         this.service = service;
         this.simpleName = simpleName;
         this.method = method;
@@ -35,6 +36,8 @@ public class MockVo {
         this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
         this.data = data;
-        this.ordered = ordered;
+
+        this.preNo = preNo;
+        this.nextNo = nextNo;
     }
 }

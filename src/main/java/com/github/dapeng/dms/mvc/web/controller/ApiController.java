@@ -164,7 +164,7 @@ public class ApiController {
             String service = mock.getServiceName();
             String simpleService = service.substring(service.lastIndexOf(".") + 1);
             return new MockVo(service, simpleService, mock.getMethodName(), mock.getVersion(), mock.getHttpMethod(),
-                    mock.getMockExpress(), mock.getData(), mock.getOrdered());
+                    mock.getMockExpress(), mock.getData(), mock.getPrevNo(), mock.getNextNo());
         }).collect(Collectors.toList());
     }
 }

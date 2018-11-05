@@ -7,10 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
@@ -27,12 +24,32 @@ public class MockDataController {
         this.mockService = mockService;
     }
 
+    /**
+     * 显示指定 mock-key 下面的 mock 规则
+     */
+    @PostMapping("/list/{service}/{method}/{version}")
+    public ResponseEntity findMockDataByMockKey(@PathVariable String service, @PathVariable String method,
+                                                @PathVariable String version) {
+
+        try {
+            mockService.findMockDataByMockKey(service, method, version);
+            return ResponseEntity.ok(Resp.of(RespEnum.OK));
+        } catch (Exception e) {
+            log.error("FindMockDataByMockKey Failed，请检查格式: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Resp.of(RespEnum.ERROR.getCode(),
+                            "FindMockDataByMockKey Failed: " + e.getMessage()));
+        }
+    }
+
+
     @PostMapping("/add")
     public ResponseEntity addMockData(@RequestParam String service, @RequestParam String method, @RequestParam String version,
-                                      @RequestParam String mockExpress, @RequestParam String mockData, @RequestParam int ordered) {
+                                      @RequestParam String mockExpress, @RequestParam String mockData) {
         try {
 
-            mockService.addMockInfo(service, method, version, mockExpress, mockData, ordered);
+            mockService.addMockInfo(service, method, version, mockExpress, mockData);
             return ResponseEntity.ok(Resp.of(RespEnum.OK));
         } catch (JSONException e) {
             log.error("Json Schema 解析失败，请检查格式: {}", e.getMessage());
@@ -41,5 +58,23 @@ public class MockDataController {
                     .body(Resp.of(RespEnum.ERROR.getCode(),
                             "Json Schema 解析失败，请检查格式: " + e.getMessage()));
         }
+    }
+
+
+    /**
+     * 优先级修改。默认规则是 从下往上进行移动。
+     * a     =>     b
+     * b     =>     a
+     *
+     * @param frontId 要修改的mock id
+     * @param belowId 需要排到某条规则之前的，那条规则的 mock id
+     * @return ResponseEntity
+     */
+    @PostMapping("/modify/priority")
+    public ResponseEntity modifyMockPriority(@RequestParam long frontId, @RequestParam long belowId) {
+        if (belowId < frontId) {
+            return ResponseEntity.status(HttpStatus.OK).body(Resp.of(RespEnum.OK));
+        }
+        return ResponseEntity.ok(Resp.of(RespEnum.OK));
     }
 }

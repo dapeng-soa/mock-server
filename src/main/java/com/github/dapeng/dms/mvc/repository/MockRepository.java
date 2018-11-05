@@ -11,7 +11,9 @@ import java.util.List;
  */
 public interface MockRepository extends JpaRepository<Mock, Long> {
 
-    List<Mock> findByMockKey(String name);
+    List<Mock> findMockByMockKey(String name);
+
+    Mock findMockByMockKeyAndGroupNextNo(String mockKey, long nextNo);
 
     List<Mock> findMockByServiceName(String name);
 }

@@ -3,6 +3,7 @@ package com.github.dapeng.dms.mvc.entity;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 
 /**
@@ -20,7 +21,15 @@ public class MockServiceInfo {
     @Column(name = "service")
     private String serviceName;
 
-    public MockServiceInfo(String serviceName) {
+    @Column(name = "created_at")
+    private Timestamp createdAt;
+
+    @Column(name = "updated_at")
+    private Timestamp updatedAt;
+
+
+    public MockServiceInfo(String serviceName, Timestamp createdAt) {
         this.serviceName = serviceName;
+        this.createdAt = createdAt;
     }
 }

@@ -18,6 +18,9 @@ public class Mock {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "mock_key")
+    private String mockKey;
+
     @Column(name = "service")
     private String serviceName;
 
@@ -26,9 +29,6 @@ public class Mock {
 
     @Column(name = "version")
     private String version;
-
-    @Column(name = "mock_key")
-    private String mockKey;
 
     @Column(name = "http_method")
     private String httpMethod;
@@ -40,19 +40,23 @@ public class Mock {
      * 匹配规则
      */
     @Column(name = "mock_rule", columnDefinition = "tinyint default 0")
-    private int mockRuleId;
+    private int mockRule;
 
     @Column(columnDefinition = "MEDIUMTEXT")
     private String data;
 
-    @Column
-    private Integer ordered;
-
     @Column(name = "service_id")
     private Long serviceId;
 
+    @Column(name = "group_prev_no")
+    private Long prevNo;
+
+    @Column(name = "group_next_no")
+    private Long nextNo;
+
+
     public Mock(String serviceName, String methodName, String version, String httpMethod,
-                String mockExpress, String data, Integer ordered) {
+                String mockExpress, String data, Long serviceId) {
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.version = version;
@@ -60,11 +64,13 @@ public class Mock {
         this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
         this.data = data;
-        this.ordered = ordered;
+        this.serviceId = serviceId;
+        this.prevNo = -1L;
+        this.nextNo = 0L;
     }
 
     public Mock(String serviceName, String methodName, String version, String httpMethod,
-                String mockExpress, String data, Integer ordered, Long serviceId) {
+                String mockExpress, String data, Long serviceId, long groupPrevNo) {
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.version = version;
@@ -72,7 +78,8 @@ public class Mock {
         this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
         this.data = data;
-        this.ordered = ordered;
         this.serviceId = serviceId;
+        this.prevNo = groupPrevNo;
+        this.nextNo = 0L;
     }
 }

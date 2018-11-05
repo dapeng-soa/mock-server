@@ -33,7 +33,7 @@ public class DmsMetadataServer implements InitializingBean {
             zookeeperHost = environment.getProperty(SysEnvUtil.KEY_SOA_ZOOKEEPER_HOST);
             if (zookeeperHost == null) {
                 log.info("zk host in the environment is not found,setting it with spring boot application, host is {}");
-                System.setProperty(SysEnvUtil.KEY_SOA_ZOOKEEPER_HOST, "127.0.0.1");
+                System.setProperty(SysEnvUtil.KEY_SOA_ZOOKEEPER_HOST, "127.0.0.1:2181");
             }
         }
         ZkBootstrap zkBootstrap = new ZkBootstrap();

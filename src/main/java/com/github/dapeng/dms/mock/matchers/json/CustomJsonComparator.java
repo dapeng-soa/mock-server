@@ -91,11 +91,11 @@ public class CustomJsonComparator extends AbstractComparator {
         }
     }
 
-    protected boolean areNumbers(Object expectedValue, Object actualValue) {
+    private boolean areNumbers(Object expectedValue, Object actualValue) {
         return expectedValue instanceof Number && actualValue instanceof Number;
     }
 
-    protected boolean areNotSameDoubles(Object expectedValue, Object actualValue) {
+    private boolean areNotSameDoubles(Object expectedValue, Object actualValue) {
         return ((Number) expectedValue).doubleValue() != ((Number) actualValue).doubleValue();
     }
 
@@ -144,15 +144,15 @@ public class CustomJsonComparator extends AbstractComparator {
     }
 
 
-    public static Map<String, Object> analysisJson(Object objJson) throws JSONException {
+    private static Map<String, Object> analysisJson(Object objJson) throws JSONException {
         Map<String, Object> jsonMap = new HashMap<>();
         analysisJson(objJson, null, jsonMap, true);
         return jsonMap;
     }
 
-    public static Map<String, Object> analysisJson(Object objJson, boolean putJson) throws JSONException {
+    static Map<String, Object> analysisExpectedJson(Object objJson) throws JSONException {
         Map<String, Object> jsonMap = new HashMap<>();
-        analysisJson(objJson, null, jsonMap, putJson);
+        analysisJson(objJson, null, jsonMap, false);
         return jsonMap;
     }
 

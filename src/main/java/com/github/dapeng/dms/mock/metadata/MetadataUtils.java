@@ -12,12 +12,14 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
+ * 根据获取的元数据信息，返回 最基本的 mock 数据 util.
+ *
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
  * @since 2018-11-02 11:40 AM
  */
 public class MetadataUtils {
 
-    public final static Gson gsonFormat = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy() {
+    private final static Gson formatGson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy() {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {
             return f.getName().equals("attachment") || f.getName().equals("__isset_bitfield");
@@ -34,11 +36,11 @@ public class MetadataUtils {
         if (service == null) {
             return null;
         }
-        return MetadataUtils.getMethodResponseJson(service, serviceName, version, methodName);
+        return getMethodResponseJson(service, serviceName, version, methodName);
     }
 
 
-    public static String getMethodResponseJson(OptimizedMetadata.OptimizedService service, String serviceName, String version, String methodName) {
+    private static String getMethodResponseJson(OptimizedMetadata.OptimizedService service, String serviceName, String version, String methodName) {
         Struct struct = getMethodResponse(service, methodName);
         if (struct == null) {
             return methodName + " of " + serviceName + ":" + version + " not found..........";
@@ -46,7 +48,7 @@ public class MetadataUtils {
             List<Field> parameters = struct.getFields();
             Map<String, Object> jsonObjectMap = new HashMap<>();
             jsonObjectMap.put("body", getSample(service, parameters));
-            return gsonFormat.toJson(jsonObjectMap);
+            return formatGson.toJson(jsonObjectMap);
         }
     }
 
@@ -60,8 +62,8 @@ public class MetadataUtils {
         String fieldName;
         DataType fieldType;
         Map<String, Object> mapTemp = new HashMap<>();
-        for (int i = 0; i < parameters.size(); i++) {
-            Field parameter = parameters.get(i);
+
+        for (Field parameter : parameters) {
             fieldName = parameter.getName();
             fieldType = parameter.getDataType();
             mapTemp.put(fieldName, assignValue(service, fieldType));
@@ -101,7 +103,7 @@ public class MetadataUtils {
             case MAP:
                 DataType keyType = fieldType.getKeyType();
                 DataType valueType = fieldType.getValueType();
-                Map<Object, Object> mapTemp = new HashMap<Object, Object>();
+                Map<Object, Object> mapTemp = new HashMap<>();
                 Object key = assignValue(service, keyType);
                 Object value = assignValue(service, valueType);
                 mapTemp.put(key, value);

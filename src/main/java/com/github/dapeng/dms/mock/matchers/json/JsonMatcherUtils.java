@@ -16,12 +16,10 @@ public class JsonMatcherUtils {
     //Object o = gson.fromJson(json, JsonObject.class);
     public static String convertJson(String json) {
         try {
-            return gson.toJson(CustomJsonComparator.analysisJson(JSONParser.parseJSON(json), false));
+            return gson.toJson(CustomJsonComparator.analysisExpectedJson(JSONParser.parseJSON(json)));
         } catch (JSONException e) {
             log.error(e.getMessage(), e);
         }
         return null;
     }
-
-
 }
