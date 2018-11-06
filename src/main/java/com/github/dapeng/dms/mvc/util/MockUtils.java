@@ -7,6 +7,7 @@ import com.github.dapeng.dms.util.Constants;
 import com.github.dapeng.router.exception.ParsingException;
 import com.github.dapeng.router.pattern.*;
 import com.github.dapeng.router.token.*;
+
 import com.google.gson.Gson;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONParser;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.github.dapeng.router.token.Token.STRING;
+import static com.github.dapeng.router.token.Token.*;
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
@@ -67,6 +68,10 @@ public class MockUtils {
                 PatternWrapper it = pattern(lexer);
                 return new PatternWrapper(PatternWrapper.PatternEnum.NotPattern.getId(),
                         new NotPattern(it.pattern));
+            case ID:
+                IdToken idToken = (IdToken) lexer.next();
+                return new PatternWrapper(PatternWrapper.PatternEnum.StringPattern.getId(),
+                        new StringPattern(idToken.name));
             case STRING:
                 StringToken st = (StringToken) lexer.next(Token.STRING);
                 return new PatternWrapper(PatternWrapper.PatternEnum.StringPattern.getId(),
