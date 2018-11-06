@@ -55,8 +55,8 @@ public class MockService {
         mocks.sort((mock, mock2) -> (int) (mock.getId() - mock2.getId()));
 
         for (Mock mock : mocks) {
-            MockContext mockContext = new MockContext(mock.getMockKey(), mock.getMockExpress(),
-                    mock.getData(), mock.getMockRule());
+            MockContext mockContext = new MockContext(mock.getMockKey(), mock.getMockCompileJson(),
+                    mock.getData());
             boolean isMatch = new HttpRequestMatcher(requestContext, mockContext).matches();
             if (isMatch) {
                 return mockContext.getMockData();
@@ -76,6 +76,9 @@ public class MockService {
         JsonSchemaValidator.matcher(mockExpress);
         JsonSchemaValidator.matcher(mockData);
 
+        //convert
+        String mockCompileJson = MockUtils.convertJsonValueToPatternJson(mockExpress);
+
         MockServiceInfo serviceInfo = mockServiceRepository.findByServiceName(service);
 
         if (serviceInfo == null) {
@@ -86,13 +89,13 @@ public class MockService {
 
         if (latestMock != null) {
             Mock newMock = new Mock(service, method, version,
-                    HttpMethod.POST.name(), mockExpress, mockData, serviceInfo.getId(), latestMock.getId());
+                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData, serviceInfo.getId(), latestMock.getId());
             mockRepository.save(newMock);
             // update latestMock nextNo when transaction committed.
             latestMock.setNextNo(newMock.getId());
         } else {
             Mock newMock = new Mock(service, method, version,
-                    HttpMethod.POST.name(), mockExpress, mockData, serviceInfo.getId());
+                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData, serviceInfo.getId());
             mockRepository.save(newMock);
         }
     }

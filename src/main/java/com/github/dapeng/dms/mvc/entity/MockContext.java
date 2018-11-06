@@ -15,12 +15,9 @@ public class MockContext {
 
     private final String mockData;
 
-    private final int mockRuleId;
-
-    public MockContext(String name, String expectedJson, String mockData, int mockRuleId) {
+    public MockContext(String name, String expectedJson, String mockData) {
         this.name = name;
         this.expectedJson = expectedJson;
         this.mockData = mockData;
-        this.mockRuleId = mockRuleId;
     }
 }

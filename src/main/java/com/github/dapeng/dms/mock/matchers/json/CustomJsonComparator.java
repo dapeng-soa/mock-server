@@ -1,8 +1,7 @@
 package com.github.dapeng.dms.mock.matchers.json;
 
-import com.github.dapeng.dms.mock.matchers.rule.Rule;
-import com.github.dapeng.dms.mock.matchers.rule.RuleTypeEnum;
 import com.github.dapeng.dms.mvc.entity.MockContext;
+import com.github.dapeng.router.pattern.*;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,6 +43,8 @@ public class CustomJsonComparator extends AbstractComparator {
     @Override
     public void compareValues(String prefix, Object expectedValue, Object actualValue, JSONCompareResult result)
             throws JSONException {
+        Pattern pattern = (Pattern) expectedValue;
+
         if (areNumbers(expectedValue, actualValue)) {
             if (areNotSameDoubles(expectedValue, actualValue)) {
                 result.fail(prefix, expectedValue, actualValue);
@@ -56,8 +57,11 @@ public class CustomJsonComparator extends AbstractComparator {
             } else if (!expectedValue.equals(actualValue)) {
                 //Rule 表达式
                 //转换 expectedValues String => Rules
-                Rule expectedRule = convertValueToRules(expectedValue);
-                boolean compareResult = expectedRule.compareValues(actualValue);
+                //Rule expectedRule = convertValueToRules(expectedValue);
+                // boolean compareResult = expectedRule.compareValues(actualValue);
+
+                //Rule 表达式
+                boolean compareResult = JsonMatcherUtils.matcherPattern(pattern, (String) actualValue);
                 //匹配失败，报错。
                 if (!compareResult) {
                     result.fail(prefix, expectedValue, actualValue);
@@ -65,7 +69,12 @@ public class CustomJsonComparator extends AbstractComparator {
             }
 
         } else {
-            result.fail(prefix, expectedValue, actualValue);
+            //Rule 表达式
+            boolean compareResult = JsonMatcherUtils.matcherPattern(pattern, actualValue.toString());
+            //匹配失败，报错。
+            if (!compareResult) {
+                result.fail(prefix, expectedValue, actualValue);
+            }
         }
     }
 
@@ -111,6 +120,8 @@ public class CustomJsonComparator extends AbstractComparator {
 
         for (String key : expectedKeys) {
             Object expectedValue = expected.get(key);
+            Pattern pattern = JsonMatcherUtils.convertJsonValueToPattern(expectedValue.toString());
+
             if (allValuesJsonMap.containsKey(key)) {
                 Object actualValue = allValuesJsonMap.get(key);
                 if (actualValue instanceof List) {
@@ -119,7 +130,7 @@ public class CustomJsonComparator extends AbstractComparator {
                     for (Object obj : actualList) {
                         try {
                             JSONCompareResult listResult = new JSONCompareResult();
-                            compareValues(qualify(prefix, key), expectedValue, obj, listResult);
+                            compareValues(qualify(prefix, key), pattern, obj, listResult);
                             if (listResult.passed()) {
                                 flag = true;
                                 break;
@@ -133,7 +144,7 @@ public class CustomJsonComparator extends AbstractComparator {
                     }
 
                 } else {
-                    compareValues(qualify(prefix, key), expectedValue, actualValue, result);
+                    compareValues(qualify(prefix, key), pattern, actualValue, result);
                     log.info("result: {}", result.toString());
                 }
             } else {
@@ -150,7 +161,7 @@ public class CustomJsonComparator extends AbstractComparator {
         return jsonMap;
     }
 
-    static Map<String, Object> analysisExpectedJson(Object objJson) throws JSONException {
+    public static Map<String, Object> analysisExpectedJson(Object objJson) throws JSONException {
         Map<String, Object> jsonMap = new HashMap<>();
         analysisJson(objJson, null, jsonMap, false);
         return jsonMap;
@@ -227,13 +238,5 @@ public class CustomJsonComparator extends AbstractComparator {
             analysisJson(jsonArray.get(i), parent, jsonMap, putJson);
             parent = prefix;
         }
-    }
-
-    /**
-     * 转换 expectedValue 表达式 为 Rule 对象。
-     */
-    private Rule convertValueToRules(Object expectedValue) {
-        int mockRuleId = mockContext.getMockRuleId();
-        return RuleTypeEnum.findRuleById(mockRuleId, expectedValue);
     }
 }

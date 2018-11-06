@@ -42,7 +42,7 @@ public class HttpRequestMatcher {
 
 
     private void withJsonParameters(String expectedParameter) {
-        this.parameterMatcer = new JsonStringMatcher(JsonMatcherUtils.convertJson(expectedParameter), MatchType.ONLY_MATCHING_FIELDS);
+        this.parameterMatcer = new JsonStringMatcher(expectedParameter, MatchType.ONLY_MATCHING_FIELDS);
     }
 
     private void withCookies(Cookie[] cookies) {

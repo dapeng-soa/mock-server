@@ -36,11 +36,9 @@ public class Mock {
     @Column(name = "mock_express", columnDefinition = "varchar(1024)")
     private String mockExpress;
 
-    /**
-     * 匹配规则
-     */
-    @Column(name = "mock_rule", columnDefinition = "tinyint default 0")
-    private int mockRule;
+    @Column(name = "mock_compile_json", columnDefinition = "varchar(1024)")
+    private String mockCompileJson;
+
 
     @Column(columnDefinition = "MEDIUMTEXT")
     private String data;
@@ -56,13 +54,14 @@ public class Mock {
 
 
     public Mock(String serviceName, String methodName, String version, String httpMethod,
-                String mockExpress, String data, Long serviceId) {
+                String mockExpress, String mockCompileJson, String data, Long serviceId) {
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.version = version;
         this.mockKey = serviceName + Constants.KEY_SEPARATE + methodName + Constants.KEY_SEPARATE + version;
         this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
+        this.mockCompileJson = mockCompileJson;
         this.data = data;
         this.serviceId = serviceId;
         this.prevNo = -1L;
@@ -70,13 +69,14 @@ public class Mock {
     }
 
     public Mock(String serviceName, String methodName, String version, String httpMethod,
-                String mockExpress, String data, Long serviceId, long groupPrevNo) {
+                String mockExpress, String mockCompileJson, String data, Long serviceId, long groupPrevNo) {
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.version = version;
         this.mockKey = serviceName + Constants.KEY_SEPARATE + methodName + Constants.KEY_SEPARATE + version;
         this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
+        this.mockCompileJson = mockCompileJson;
         this.data = data;
         this.serviceId = serviceId;
         this.prevNo = groupPrevNo;
