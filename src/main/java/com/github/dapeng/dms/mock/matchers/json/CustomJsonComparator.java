@@ -55,12 +55,7 @@ public class CustomJsonComparator extends AbstractComparator {
             } else if (expectedValue instanceof JSONObject) {
                 compareJSON(prefix, (JSONObject) expectedValue, (JSONObject) actualValue, result);
             } else if (!expectedValue.equals(actualValue)) {
-                //Rule 表达式
-                //转换 expectedValues String => Rules
-                //Rule expectedRule = convertValueToRules(expectedValue);
-                // boolean compareResult = expectedRule.compareValues(actualValue);
-
-                //Rule 表达式
+                //Rule Pattern 表达式
                 boolean compareResult = JsonMatcherUtils.matcherPattern(pattern, (String) actualValue);
                 //匹配失败，报错。
                 if (!compareResult) {
@@ -115,7 +110,6 @@ public class CustomJsonComparator extends AbstractComparator {
      */
     protected void checkJsonObjectKeysExpectedInActual(String prefix, JSONObject expected, JSONObject actual, JSONCompareResult result) throws JSONException {
         Set<String> expectedKeys = getKeys(expected);
-
         Map<String, Object> allValuesJsonMap = analysisJson(actual);
 
         for (String key : expectedKeys) {

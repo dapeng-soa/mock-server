@@ -21,24 +21,16 @@ import static com.github.dapeng.core.helper.IPUtils.matchIpWithMask;
 public class JsonMatcherUtils {
     private static final Gson GSON = new Gson();
 
-    //Object o = gson.fromJson(json, JsonObject.class);
-    public static String convertJson(String json) {
-        try {
-            return GSON.toJson(CustomJsonComparator.analysisExpectedJson(JSONParser.parseJSON(json)));
-        } catch (JSONException e) {
-            log.error(e.getMessage(), e);
-        }
-        return null;
-    }
-
-    //LinkedTreeMap
+    /**
+     * {@link com.google.gson.internal.LinkedTreeMap}
+     */
     public static Pattern convertJsonValueToPattern(String valueJson) {
 
-        Custom obj = GSON.fromJson(valueJson, Custom.class);
+        Custom custom = GSON.fromJson(valueJson, Custom.class);
 
-        Class<? extends Pattern> patternClass = PatternWrapper.findPatternClass(obj.type);
+        Class<? extends Pattern> patternClass = PatternWrapper.findPatternClass(custom.type);
 
-        Pattern pattern = GSON.fromJson(obj.pattern, patternClass);
+        Pattern pattern = GSON.fromJson(custom.pattern, patternClass);
 
         return pattern;
     }
@@ -116,4 +108,13 @@ public class JsonMatcherUtils {
     }
 
 
+    @Deprecated
+    public static String convertJson(String json) {
+        try {
+            return GSON.toJson(CustomJsonComparator.analysisExpectedJson(JSONParser.parseJSON(json)));
+        } catch (JSONException e) {
+            log.error(e.getMessage(), e);
+        }
+        return null;
+    }
 }
