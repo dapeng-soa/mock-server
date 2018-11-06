@@ -16,18 +16,18 @@ spring:
   jpa:
     show-sql: true
     generate-ddl: true
-#    database: mysql
+  #    database: mysql
 
   devtools:
     restart:
       enabled: true
-#  mvc:
-#    view:
-#      prefix: /templates/
-#      suffix: .jsp
-#    static-path-pattern: /**
-#  resources:
-#    static-locations: /static/
+  mvc:
+    view:
+      prefix: /views/
+      suffix: .jsp
+    static-path-pattern: /**
+  resources:
+    static-locations: /static/
 
 server:
   port: 9000
@@ -35,4 +35,6 @@ server:
 soa:
   zookeeper:
     host: 127.0.0.1:2181
+
+
 

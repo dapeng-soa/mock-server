@@ -4,6 +4,10 @@ import com.github.dapeng.dms.mvc.entity.Mock;
 import com.github.dapeng.dms.mvc.services.MockService;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespEnum;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.http.HttpStatus;
@@ -17,10 +21,10 @@ import java.util.List;
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
  * @since 2018-10-31 4:13 PM
  */
+@Api("Mock数据增删该查相关API")
 @RestController
 @RequestMapping("/mock")
 @Slf4j
-//@Indexed
 public class MockDataController {
 
     private final MockService mockService;
@@ -45,7 +49,13 @@ public class MockDataController {
         }
     }
 
-
+    @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")
+    @ApiImplicitParams({@ApiImplicitParam(name = "service", value = "服务名称", dataType = "String"),
+            @ApiImplicitParam(name = "method", value = "方法名称", dataType = "String"),
+            @ApiImplicitParam(name = "version", value = "版本号", dataType = "String"),
+            @ApiImplicitParam(name = "mockExpress", value = "mock匹配表达式", dataType = "String"),
+            @ApiImplicitParam(name = "mockData", value = "mock需要返回的数据", dataType = "String")
+    })
     @PostMapping("/add")
     public ResponseEntity addMockData(@RequestParam String service, @RequestParam String method, @RequestParam String version,
                                       @RequestParam String mockExpress, @RequestParam String mockData) {

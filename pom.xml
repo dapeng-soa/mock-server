@@ -112,12 +112,12 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context-indexer</artifactId>
             <version>5.0.10.RELEASE</version>
             <optional>true</optional>
-        </dependency>
+        </dependency>-->
 
         <!--热部署依赖，生产环境、应用被打成jar包后，自动失效-->
         <dependency>
@@ -127,9 +127,22 @@
         </dependency>
 
         <dependency>
+            <groupId>com.spring4all</groupId>
+            <artifactId>swagger-spring-boot-starter</artifactId>
+            <version>1.8.0.RELEASE</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.maple</groupId>
+            <artifactId>spring-mybatis</artifactId>
+            <version>1.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
