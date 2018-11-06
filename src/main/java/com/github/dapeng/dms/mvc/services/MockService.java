@@ -130,23 +130,20 @@ public class MockService {
         mockListSort(mocks);
 
         Mock frontMockBef = mocks.get(mocks.indexOf(frontMock) - 1);
-        Mock frontMockAf = mocks.get(mocks.indexOf(frontMock) + 1);
 
         Mock belowMockBef = mocks.get(mocks.indexOf(belowMock) - 1);
         Mock belowMockAf = mocks.get(mocks.indexOf(belowMock) + 1);
+
         //front前的mock 的 nextNo 为 below 的 id
         frontMockBef.setNextNo(belowMock.getId());
-        //below prevNo
-        belowMock.setPrevNo(frontMockBef.getId());
-        // front prevNo
+        // front后的元素不需要改变
+        //front元素需要改,front元素的prev改为 below id
         frontMock.setPrevNo(belowMock.getId());
 
-
-        belowMock.setNextNo(frontMock.getId());
-
-        //below
-        belowMockBef.setNextNo(belowMockAf.getId());
-        belowMockAf.setPrevNo(belowMockBef.getId());
+        //below前一个节点的next改为 below的next
+        belowMockBef.setNextNo(belowMock.getNextNo());
+        //below后一个节点的前一个节点改为 below的前一个节点的id
+        belowMockAf.setPrevNo(belowMock.getPrevNo());
     }
 
     public static List<Mock> mockListSort(List<Mock> data) {
