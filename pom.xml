@@ -136,13 +136,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>com.maple</groupId>
-            <artifactId>spring-mybatis</artifactId>
-            <version>1.0</version>
-        </dependency>
-
     </dependencies>
 
     <build>
