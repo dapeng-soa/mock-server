@@ -14,10 +14,7 @@ import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespEnum;
 import com.github.dapeng.json.OptimizedMetadata;
 import com.github.dapeng.openapi.cache.ServiceCache;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.http.HttpStatus;
@@ -49,14 +46,14 @@ public class AdminController {
     }
 
     @ApiOperation(value = "显示目前已有的Mock服务Service")
-    @RequestMapping("/listServices")
+    @GetMapping("/listServices")
     public Object listMockService(Model model) {
         List<MockServiceInfo> mockServiceList = mockService.findMockServiceList();
         return mockServiceList.stream().map(serviceInfo -> {
-            List<MockVo> mockVoList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));
+            List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));
             String serviceName = serviceInfo.getServiceName();
             String simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
-            return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, mockVoList);
+            return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, mockList);
         }).collect(Collectors.toList());
     }
 
@@ -78,27 +75,21 @@ public class AdminController {
         return methodVoList;
     }
 
-
-
-
-
-
-    /**
-     * 显示指定 mock-key 下面的 mock 规则
-     */
-
-    @GetMapping("/listMethods")
-    public Object findMockDataByMockKey(@PathVariable String service, @PathVariable String method,
-                                        @PathVariable String version) {
-
+    @ApiOperation(value = "添加一个Mock服务", notes = "注意服务名包全名")
+    @ApiResponse(code = 200, message = "返回添加成功后的MockServiceVo对象")
+    @PostMapping("/addService")
+    public Object addService(@RequestParam String serviceName) {
         try {
-            return mockService.findMockDataByMockKey(service, method, version);
+            return mockService.addServiceInfo(serviceName);
         } catch (Exception e) {
-            log.error("FindMockDataByMockKey Failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Resp.of(RespEnum.ERROR.getCode(),
-                    "FindMockDataByMockKey Failed: " + e.getMessage()));
+            log.error("addService Error: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Resp.of(RespEnum.ERROR.getCode(),
+                            "addService Fialed;" + e.getMessage()));
         }
     }
+
 
     @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")
     @ApiImplicitParams({@ApiImplicitParam(name = "service", value = "服务名称", dataType = "String"),
@@ -107,7 +98,7 @@ public class AdminController {
             @ApiImplicitParam(name = "mockExpress", value = "mock匹配表达式", dataType = "String"),
             @ApiImplicitParam(name = "mockData", value = "mock需要返回的数据", dataType = "String")
     })
-    @PostMapping("/add")
+    @PostMapping("/addMock")
     public ResponseEntity addMockData(@RequestParam String service, @RequestParam String method, @RequestParam String version,
                                       @RequestParam String mockExpress, @RequestParam String mockData) {
         try {
@@ -150,88 +141,30 @@ public class AdminController {
     }
 
 
-    @RequestMapping(value = "findmethod/{serviceName}/{version}/{methodName}", method = RequestMethod.GET)
-    @ResponseBody
-    public Method findMethod(@PathVariable String serviceName, @PathVariable String version, @PathVariable String methodName) {
-        OptimizedMetadata.OptimizedService optimizedService = ServiceCache.getService(serviceName, version);
-
-        return optimizedService.getMethodMap().get(methodName);
+    @ApiOperation(value = "修改Mock服务信息", notes = "注意传入MockServiceVo Json形式，ID不要改变")
+    @PostMapping("/modify/service")
+    public Object updateService(@RequestBody MockServiceVo mockServiceVo) {
+        try {
+            mockService.updateService(mockServiceVo);
+            return ResponseEntity.ok(Resp.of(RespEnum.OK));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Resp.of(RespEnum.ERROR.getCode(), e.getMessage()));
+        }
     }
 
-    @RequestMapping(value = "struct/{serviceName}/{version}/{ref}", method = RequestMethod.GET)
-    @Transactional(rollbackFor = Exception.class)
-    public String struct(HttpServletRequest request, @PathVariable String serviceName, @PathVariable String version, @PathVariable String ref) {
-        OptimizedMetadata.OptimizedService optimizedService = ServiceCache.getService(serviceName, version);
-
-        request.setAttribute("struct", optimizedService.getOptimizedStructs().get(ref).getStruct());
-        request.setAttribute("service", optimizedService.getService());
-        request.setAttribute("structs", optimizedService.getService().getStructDefinitions());
-        return "api/struct";
-    }
-
-    @RequestMapping(value = "findstruct/{serviceName}/{version}/{fullStructName}", method = RequestMethod.GET)
-    @ResponseBody
-    public Struct findStruct(@PathVariable String serviceName, @PathVariable String version, @PathVariable String fullStructName) {
-        OptimizedMetadata.OptimizedService optimizedService = ServiceCache.getService(serviceName, version);
-
-        return optimizedService.getOptimizedStructs().get(fullStructName).getStruct();
-    }
-
-    @RequestMapping(value = "findEnum/{serviceName}/{version}/{ref}", method = RequestMethod.GET)
-    @ResponseBody
-    public TEnum findEnum(@PathVariable String serviceName, @PathVariable String version, @PathVariable String ref) {
-        OptimizedMetadata.OptimizedService optimizedService = ServiceCache.getService(serviceName, version);
-
-        return optimizedService.getEnumMap().get(ref);
-    }
-
-    /**
-     * 返回枚举 json async
-     *
-     * @param request
-     * @param serviceName
-     * @param version
-     * @param ref
-     * @return
-     */
-    @RequestMapping(value = "enum/{serviceName}/{version}/{ref}", method = RequestMethod.GET)
-    @Transactional(rollbackFor = Exception.class)
-    public String anEnum(HttpServletRequest request, @PathVariable String serviceName, @PathVariable String version, @PathVariable String ref) {
-        OptimizedMetadata.OptimizedService optimizedService = ServiceCache.getService(serviceName, version);
-
-        request.setAttribute("anEnum", optimizedService.getEnumMap().get(ref));
-
-        request.setAttribute("service", optimizedService.getService());
-        request.setAttribute("enums", optimizedService.getService().getEnumDefinitions());
-        return "api/enum";
-    }
-
-
-    @RequestMapping(value = "test/{serviceName}/{version}/{methodName}", method = RequestMethod.GET)
-    @Transactional(rollbackFor = Exception.class)
-    public String goTest(HttpServletRequest request, @PathVariable String serviceName, @PathVariable String version, @PathVariable String methodName) {
-        OptimizedMetadata.OptimizedService optimizedService = ServiceCache.getService(serviceName, version);
-
-        request.setAttribute("service", optimizedService.getService());
-        request.setAttribute("method", optimizedService.getMethodMap().get(methodName));
-        request.setAttribute("services", ServiceCache.getServices().values()
-                .stream().map(x -> x.getService()).collect(Collectors.toList()));
-        return "api/test";
-    }
-
-    @RequestMapping(value = "findService/{serviceName}/{version}", method = RequestMethod.GET)
-    @ResponseBody
-    public Service findService(@PathVariable String serviceName, @PathVariable String version) {
-        return ServiceCache.getService(serviceName, version).getService();
-    }
-
-    @RequestMapping(value = "findServiceAfterRefresh/{serviceName}/{version}/{refresh}", method = RequestMethod.GET)
-    @ResponseBody
-    public Service findService(@PathVariable String serviceName, @PathVariable String version, @PathVariable boolean refresh) {
-        /*if (refresh) {
-            serviceCache.reloadServices();
-        }*/
-        return ServiceCache.getService(serviceName, version).getService();
+    @ApiOperation(value = "修改Mock服务信息", notes = "注意传入MockServiceVo Json形式，ID不要改变")
+    @PostMapping("/modify/mock")
+    public Object updateMock(@RequestBody MockVo mockVo) {
+        try {
+            mockService.updateMock(mockVo);
+            return ResponseEntity.ok(Resp.of(RespEnum.OK));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Resp.of(RespEnum.ERROR.getCode(), e.getMessage()));
+        }
     }
 
 
@@ -242,8 +175,8 @@ public class AdminController {
         return mockList.stream().map(mock -> {
             String service = mock.getServiceName();
             String simpleService = service.substring(service.lastIndexOf(".") + 1);
-            return new MockVo(service, simpleService, mock.getMethodName(), mock.getVersion(), mock.getHttpMethod(),
-                    mock.getMockExpress(), mock.getData(), mock.getSort());
+            return new MockVo(mock.getId(), mock.getServiceName(), mock.getMethodName(), mock.getVersion(),
+                    mock.getHttpMethod(), mock.getMockExpress(), mock.getData(), mock.getServiceId(), mock.getSort());
         }).collect(Collectors.toList());
     }
 }

@@ -12,4 +12,7 @@ public interface MockServiceRepository extends JpaRepository<MockServiceInfo, Lo
 
     MockServiceInfo findByServiceName(String name);
 
+    MockServiceInfo findById(long id);
+
+
 }

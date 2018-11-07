@@ -9,16 +9,22 @@ import com.github.dapeng.dms.mock.matchers.validator.JsonSchemaValidator;
 import com.github.dapeng.dms.mvc.repository.MockRepository;
 import com.github.dapeng.dms.mock.request.HttpRequestContext;
 import com.github.dapeng.dms.mvc.util.MockUtils;
+import com.github.dapeng.dms.mvc.vo.MockServiceVo;
+import com.github.dapeng.dms.mvc.vo.MockVo;
 import com.github.dapeng.dms.util.Constants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.BeanUtils;
 import org.json.JSONException;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
 
@@ -59,6 +65,16 @@ public class MockService {
             }
         }
         return null;
+    }
+
+
+    /**
+     * add service-info
+     */
+    public MockServiceVo addServiceInfo(String serviceName) {
+        MockServiceInfo serviceInfo = new MockServiceInfo(serviceName, new Timestamp(System.currentTimeMillis()));
+        mockServiceRepository.save(serviceInfo);
+        return new MockServiceVo(serviceInfo.getId(), serviceName);
     }
 
     /**
@@ -131,6 +147,17 @@ public class MockService {
             newSort = frontMock.getSort() / 2;
         }
         belowMock.setSort(newSort);
+    }
+
+    public void updateService(MockServiceVo mockServiceVo) {
+        MockServiceInfo serviceInfo = mockServiceRepository.findById(mockServiceVo.getServiceId());
+        serviceInfo.setServiceName(mockServiceVo.getService());
+    }
+
+    public void updateMock(MockVo mockVo) throws InvocationTargetException, IllegalAccessException {
+        Mock mock = MockUtils.optional(mockRepository.findById(mockVo.getId()), "根据mock id 没有查询到Mock信息");
+        BeanUtils.copyProperties(mock, mockVo);
+        log.info("更新 mock 信息完成");
     }
 
 

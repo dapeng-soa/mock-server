@@ -1,6 +1,13 @@
 package com.github.dapeng.dms.mvc.vo;
 
+import com.github.dapeng.dms.util.Constants;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
@@ -8,33 +15,45 @@ import lombok.Data;
  */
 @Data
 public class MockVo {
+    @ApiModelProperty("当前Mock规则唯一ID")
+    private Long id;
 
-    private String service;
+    @ApiModelProperty("服务名称")
+    private String serviceName;
 
-    private String simpleName;
+    @ApiModelProperty("方法名称")
+    private String methodName;
 
-    private String method;
-
+    @ApiModelProperty("版本信息")
     private String version;
 
+    @ApiModelProperty("Http请求方法(GET/POST/PUT/DELETE)")
     private String httpMethod;
 
+    @ApiModelProperty("Mock预期表达式")
     private String mockExpress;
 
+
+    @ApiModelProperty("Mock返回数据")
     private String data;
 
-    private long sort;
+    @ApiModelProperty("服务编号")
+    private Long serviceId;
 
-    public MockVo(String service, String simpleName, String method,
-                  String version, String httpMethod, String mockExpress,
-                  String data, long sort) {
-        this.service = service;
-        this.simpleName = simpleName;
-        this.method = method;
+    @ApiModelProperty("排序号")
+    private Long sort;
+
+
+    public MockVo(Long id, String serviceName, String methodName, String version, String httpMethod,
+                  String mockExpress, String data, Long serviceId, Long sort) {
+        this.id = id;
+        this.serviceName = serviceName;
+        this.methodName = methodName;
         this.version = version;
         this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
         this.data = data;
+        this.serviceId = serviceId;
         this.sort = sort;
     }
 }

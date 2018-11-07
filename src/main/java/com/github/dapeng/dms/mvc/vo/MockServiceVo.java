@@ -1,5 +1,6 @@
 package com.github.dapeng.dms.mvc.vo;
 
+import com.github.dapeng.dms.mvc.entity.Mock;
 import lombok.Data;
 
 import java.util.List;
@@ -17,6 +18,13 @@ public class MockServiceVo {
     private String simpleName;
 
     private List<MockVo> mockVoList;
+
+    public MockServiceVo(long serviceId, String service) {
+        this.serviceId = serviceId;
+        this.service = service;
+        this.simpleName = service.substring(service.lastIndexOf(".") + 1);
+        this.mockVoList = null;
+    }
 
     public MockServiceVo(long serviceId, String service, String simpleName, List<MockVo> mockVoList) {
         this.serviceId = serviceId;
