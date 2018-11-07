@@ -27,4 +27,7 @@
 
 logs
 
+file**/**
 
+file/resources
+file/thrifts
