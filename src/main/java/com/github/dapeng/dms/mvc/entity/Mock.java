@@ -57,11 +57,9 @@ public class Mock {
     @Column(name = "service_id")
     private Long serviceId;
 
-    @Column(name = "group_prev_no")
-    private Long prevNo;
-
-    @Column(name = "group_next_no")
-    private Long nextNo;
+    @ApiModelProperty("排序号")
+    @Column
+    private Long sort;
 
 
     public Mock(String serviceName, String methodName, String version, String httpMethod,
@@ -75,12 +73,11 @@ public class Mock {
         this.mockCompileJson = mockCompileJson;
         this.data = data;
         this.serviceId = serviceId;
-        this.prevNo = -1L;
-        this.nextNo = 0L;
+        this.sort = 1000L;
     }
 
     public Mock(String serviceName, String methodName, String version, String httpMethod,
-                String mockExpress, String mockCompileJson, String data, Long serviceId, long groupPrevNo) {
+                String mockExpress, String mockCompileJson, String data, Long serviceId, long sort) {
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.version = version;
@@ -90,7 +87,8 @@ public class Mock {
         this.mockCompileJson = mockCompileJson;
         this.data = data;
         this.serviceId = serviceId;
-        this.prevNo = groupPrevNo;
-        this.nextNo = 0L;
+        this.sort = sort;
     }
+
+
 }

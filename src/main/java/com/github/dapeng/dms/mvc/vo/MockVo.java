@@ -1,4 +1,4 @@
-package com.github.dapeng.dms.mvc.web.vo;
+package com.github.dapeng.dms.mvc.vo;
 
 import lombok.Data;
 
@@ -23,12 +23,11 @@ public class MockVo {
 
     private String data;
 
-    private long preNo;
-    private long nextNo;
+    private long sort;
 
     public MockVo(String service, String simpleName, String method,
                   String version, String httpMethod, String mockExpress,
-                  String data, long preNo, long nextNo) {
+                  String data, long sort) {
         this.service = service;
         this.simpleName = simpleName;
         this.method = method;
@@ -36,8 +35,6 @@ public class MockVo {
         this.httpMethod = httpMethod;
         this.mockExpress = mockExpress;
         this.data = data;
-
-        this.preNo = preNo;
-        this.nextNo = nextNo;
+        this.sort = sort;
     }
 }

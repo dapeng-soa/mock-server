@@ -2,6 +2,7 @@ package com.github.dapeng.dms.mvc.repository;
 
 import com.github.dapeng.dms.mvc.entity.Mock;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -13,7 +14,13 @@ public interface MockRepository extends JpaRepository<Mock, Long> {
 
     List<Mock> findMockByMockKey(String name);
 
-    Mock findMockByMockKeyAndNextNo(String mockKey, long nextNo);
+    List<Mock> findMockByServiceId(long serviceId);
 
-    List<Mock> findMockByServiceName(String name);
+
+    @Query(nativeQuery = true, value = "select * from mock_data where mock_key =?1  order by sort  desc limit 1")
+    Mock findMockByMockKeyOrderBySortDesc(String mockKey);
+
+
+    @Query(nativeQuery = true, value = "select * from mock_data where sort <?1  order by sort  desc limit 1")
+    Mock findMockBySortLimit(long sort);
 }

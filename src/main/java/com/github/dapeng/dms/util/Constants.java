@@ -12,4 +12,6 @@ public interface Constants {
     String SERVICE_VIRTUAL_VAL = "true";
     String SERVICE_GROUP_KEY = "group";
     String SERVICE_GROUP_DEFAULT = "OtherService";
+
+    long DEFAULT_SORT_NUM = 1000L;
 }

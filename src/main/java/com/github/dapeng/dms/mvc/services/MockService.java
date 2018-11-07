@@ -18,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
@@ -38,10 +38,6 @@ public class MockService {
     public MockService(MockRepository mockRepository, MockServiceRepository mockServiceRepository) {
         this.mockRepository = mockRepository;
         this.mockServiceRepository = mockServiceRepository;
-    }
-
-    public List<Mock> findMockByName(String name) {
-        return mockRepository.findMockByServiceName(name);
     }
 
 
@@ -72,10 +68,8 @@ public class MockService {
      */
     public void addMockInfo(String service, String method, String version,
                             String mockExpress, String mockData) throws JSONException {
-        //判断request Json 是否合法。
         JsonSchemaValidator.matcher(mockExpress);
         JsonSchemaValidator.matcher(mockData);
-
         //convert
         String mockCompileJson = MockUtils.convertJsonValueToPatternJson(mockExpress);
 
@@ -85,17 +79,15 @@ public class MockService {
             serviceInfo = mockServiceRepository.save(new MockServiceInfo(service, new Timestamp(System.currentTimeMillis())));
         }
         String mockKey = MockUtils.combineMockKey(service, method, version);
-        Mock latestMock = mockRepository.findMockByMockKeyAndNextNo(mockKey, 0L);
+        Mock latestMock = mockRepository.findMockByMockKeyOrderBySortDesc(mockKey);
 
         if (latestMock != null) {
             Mock newMock = new Mock(service, method, version,
-                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData, serviceInfo.getId(), latestMock.getId());
+                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData, serviceInfo.getId(), latestMock.getSort() + DEFAULT_SORT_NUM);
             mockRepository.save(newMock);
-            // update latestMock nextNo when transaction committed.
-            latestMock.setNextNo(newMock.getId());
         } else {
             Mock newMock = new Mock(service, method, version,
-                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData, serviceInfo.getId());
+                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData, serviceInfo.getId(), DEFAULT_SORT_NUM);
             mockRepository.save(newMock);
         }
     }
@@ -106,8 +98,8 @@ public class MockService {
     }
 
 
-    public List<Mock> findMockByServiceName(String serviceName) {
-        return mockRepository.findMockByServiceName(serviceName);
+    public List<Mock> findMockByServiceId(long serviceId) {
+        return mockRepository.findMockByServiceId(serviceId);
     }
 
     /**
@@ -116,7 +108,8 @@ public class MockService {
     public List<Mock> findMockDataByMockKey(String service, String method, String version) {
         String mockKey = MockUtils.combineMockKey(service, method, version);
         List<Mock> mocks = mockRepository.findMockByMockKey(mockKey);
-        return mockListSort(mocks);
+        mocks.sort((m1, m2) -> (int) (m1.getSort() - m2.getSort()));
+        return mocks;
     }
 
     /**
@@ -125,28 +118,31 @@ public class MockService {
     public void modifyMockPriority(long frontId, long belowId) throws JSONException {
         Mock frontMock = MockUtils.optional(mockRepository.findById(frontId), "根据 frontId 查询不到 Mock data 信息");
         Mock belowMock = MockUtils.optional(mockRepository.findById(belowId), "根据 belowId 查询不到 Mock data 信息");
-        //todo 校验 front 再 below 上面
-        List<Mock> mocks = mockRepository.findMockByMockKey(frontMock.getMockKey());
-        mockListSort(mocks);
 
-        Mock frontMockBef = mocks.get(mocks.indexOf(frontMock) - 1);
+        if (frontMock.getSort() > belowMock.getSort()) {
+            throw new IllegalArgumentException("修改优先级错误,frontId 顺序低于 belowId");
+        }
 
-        Mock belowMockBef = mocks.get(mocks.indexOf(belowMock) - 1);
-        Mock belowMockAf = mocks.get(mocks.indexOf(belowMock) + 1);
-
-        //front前的mock 的 nextNo 为 below 的 id
-        frontMockBef.setNextNo(belowMock.getId());
-        // front后的元素不需要改变
-        //front元素需要改,front元素的prev改为 below id
-        frontMock.setPrevNo(belowMock.getId());
-
-        //below前一个节点的next改为 below的next
-        belowMockBef.setNextNo(belowMock.getNextNo());
-        //below后一个节点的前一个节点改为 below的前一个节点的id
-        belowMockAf.setPrevNo(belowMock.getPrevNo());
+        Mock frontBef = mockRepository.findMockBySortLimit(frontMock.getSort());
+        long newSort;
+        if (frontBef != null) {
+            newSort = (frontMock.getSort() + frontBef.getSort()) / 2;
+        } else {
+            newSort = frontMock.getSort() / 2;
+        }
+        belowMock.setSort(newSort);
     }
 
-    public static List<Mock> mockListSort(List<Mock> data) {
+
+
+
+
+
+
+
+
+
+   /* public static List<Mock> mockListSort(List<Mock> data) {
         int next = 0;
         data.sort((o1, o2) -> (int) (o1.getPrevNo() - o2.getPrevNo()));
         List<Long> mockIdList = data.stream().map(Mock::getId).collect(Collectors.toList());
@@ -164,6 +160,6 @@ public class MockService {
             }
         }
         return result;
-    }
+    }*/
 
 }

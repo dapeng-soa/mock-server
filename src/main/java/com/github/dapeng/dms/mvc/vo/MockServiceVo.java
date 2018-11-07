@@ -1,4 +1,4 @@
-package com.github.dapeng.dms.mvc.web.vo;
+package com.github.dapeng.dms.mvc.vo;
 
 import lombok.Data;
 
@@ -10,6 +10,7 @@ import java.util.List;
  */
 @Data
 public class MockServiceVo {
+    private long serviceId;
 
     private String service;
 
@@ -17,8 +18,8 @@ public class MockServiceVo {
 
     private List<MockVo> mockVoList;
 
-
-    public MockServiceVo(String service, String simpleName, List<MockVo> mockVoList) {
+    public MockServiceVo(long serviceId, String service, String simpleName, List<MockVo> mockVoList) {
+        this.serviceId = serviceId;
         this.service = service;
         this.simpleName = simpleName;
         this.mockVoList = mockVoList;
