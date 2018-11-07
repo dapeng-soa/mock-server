@@ -1,4 +1,4 @@
-package com.github.dapeng.dms.mvc.util;
+package com.github.dapeng.dms.web.util;
 
 import com.github.dapeng.dms.mock.matchers.json.CustomJsonComparator;
 import com.github.dapeng.dms.mock.matchers.rule.PatternWrapper;

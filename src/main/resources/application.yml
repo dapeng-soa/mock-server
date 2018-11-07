@@ -28,6 +28,9 @@ spring:
     static-path-pattern: /**
   resources:
     static-locations: /static/
+  servlet:
+    multipart:
+      max-file-size: 10MB
 
 server:
   port: 9000
@@ -35,6 +38,5 @@ server:
 soa:
   zookeeper:
     host: 127.0.0.1:2181
-
 
 

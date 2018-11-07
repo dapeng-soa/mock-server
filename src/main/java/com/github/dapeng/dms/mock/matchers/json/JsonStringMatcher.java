@@ -2,7 +2,7 @@ package com.github.dapeng.dms.mock.matchers.json;
 
 import com.github.dapeng.dms.mock.matchers.Matcher;
 import com.github.dapeng.dms.mock.request.HttpRequestContext;
-import com.github.dapeng.dms.mvc.entity.MockContext;
+import com.github.dapeng.dms.web.entity.MockContext;
 import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.skyscreamer.jsonassert.JSONCompare;

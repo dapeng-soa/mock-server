@@ -1,29 +1,21 @@
-package com.github.dapeng.dms.mvc.web.controller;
+package com.github.dapeng.dms.web.controller.controller;
 
-import com.github.dapeng.core.metadata.Method;
-import com.github.dapeng.core.metadata.Service;
-import com.github.dapeng.core.metadata.Struct;
-import com.github.dapeng.core.metadata.TEnum;
-import com.github.dapeng.dms.mvc.entity.Mock;
-import com.github.dapeng.dms.mvc.entity.MockServiceInfo;
-import com.github.dapeng.dms.mvc.services.MockService;
-import com.github.dapeng.dms.mvc.vo.MockMethodVo;
-import com.github.dapeng.dms.mvc.vo.MockServiceVo;
-import com.github.dapeng.dms.mvc.vo.MockVo;
+import com.github.dapeng.dms.web.entity.Mock;
+import com.github.dapeng.dms.web.entity.MockServiceInfo;
+import com.github.dapeng.dms.web.services.MockService;
+import com.github.dapeng.dms.web.vo.MockMethodVo;
+import com.github.dapeng.dms.web.vo.MockServiceVo;
+import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespEnum;
-import com.github.dapeng.json.OptimizedMetadata;
-import com.github.dapeng.openapi.cache.ServiceCache;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +39,7 @@ public class AdminController {
 
     @ApiOperation(value = "显示目前已有的Mock服务Service")
     @GetMapping("/listServices")
-    public Object listMockService(Model model) {
+    public Object listMockService(Model model) throws InterruptedException {
         List<MockServiceInfo> mockServiceList = mockService.findMockServiceList();
         return mockServiceList.stream().map(serviceInfo -> {
             List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));

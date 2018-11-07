@@ -1,6 +1,5 @@
-package com.github.dapeng.dms.mvc.vo;
+package com.github.dapeng.dms.web.vo;
 
-import com.github.dapeng.dms.mvc.entity.Mock;
 import lombok.Data;
 
 import java.util.List;

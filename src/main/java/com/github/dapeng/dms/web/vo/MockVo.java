@@ -1,13 +1,7 @@
-package com.github.dapeng.dms.mvc.vo;
+package com.github.dapeng.dms.web.vo;
 
-import com.github.dapeng.dms.util.Constants;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>

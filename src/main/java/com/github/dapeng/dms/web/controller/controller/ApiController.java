@@ -1,7 +1,7 @@
-package com.github.dapeng.dms.mvc.web.controller;
+package com.github.dapeng.dms.web.controller.controller;
 
 import com.github.dapeng.dms.mock.metadata.MetadataUtils;
-import com.github.dapeng.dms.mvc.services.MockService;
+import com.github.dapeng.dms.web.services.MockService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;

@@ -1,8 +1,7 @@
 package com.github.dapeng.dms.mock.matchers;
 
 import com.github.dapeng.dms.mock.matchers.json.JsonStringMatcher;
-import com.github.dapeng.dms.mvc.entity.MockContext;
-import com.github.dapeng.dms.mock.matchers.json.JsonMatcherUtils;
+import com.github.dapeng.dms.web.entity.MockContext;
 import com.github.dapeng.dms.mock.matchers.json.MatchType;
 import com.github.dapeng.dms.mock.request.HttpRequestContext;
 import lombok.extern.slf4j.Slf4j;

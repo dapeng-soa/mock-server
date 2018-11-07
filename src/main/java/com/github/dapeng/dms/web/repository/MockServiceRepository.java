@@ -1,6 +1,6 @@
-package com.github.dapeng.dms.mvc.repository;
+package com.github.dapeng.dms.web.repository;
 
-import com.github.dapeng.dms.mvc.entity.MockServiceInfo;
+import com.github.dapeng.dms.web.entity.MockServiceInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**

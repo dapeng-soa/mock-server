@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @EnableSwagger2Doc
 @SpringBootApplication
-@PropertySource("classpath:db.properties")
+@PropertySource({"classpath:db.properties", "classpath:oss.properties"})
 public class DapengMockServerApplication {
 
     public static void main(String[] args) {

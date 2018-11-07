@@ -1,4 +1,4 @@
-package com.github.dapeng.dms.mvc.entity;
+package com.github.dapeng.dms.web.entity;
 
 import lombok.Data;
 
