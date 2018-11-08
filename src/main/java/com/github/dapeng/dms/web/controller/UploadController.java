@@ -1,11 +1,14 @@
 package com.github.dapeng.dms.web.controller;
 
+import com.github.dapeng.dms.thrift.MetadataHandler;
+import com.github.dapeng.dms.util.Resp;
+import com.github.dapeng.dms.util.RespEnum;
+import com.github.dapeng.json.OptimizedMetadata;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -13,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
@@ -21,6 +25,12 @@ import java.util.List;
 @Controller
 @Slf4j
 public class UploadController {
+
+    private final MetadataHandler metadataHandler;
+
+    public UploadController(MetadataHandler metadataHandler) {
+        this.metadataHandler = metadataHandler;
+    }
 
     @RequestMapping("/upload")
     public String handleUpload() {
@@ -182,6 +192,20 @@ public class UploadController {
             }
         }
         return "SUCCESS";
+    }
+
+    @ResponseBody
+    @RequestMapping("/startParse")
+    public Object parseMetadata(String targetDir) {
+        try {
+            return metadataHandler.loadMetadata(targetDir);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Resp.of(RespEnum.ERROR.getCode(), "parseMetadata failed: " + e.getMessage()));
+        }
+
     }
 
 

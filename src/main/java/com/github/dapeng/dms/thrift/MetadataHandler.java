@@ -32,14 +32,14 @@ public class MetadataHandler {
      */
     private static Map<String, OptimizedMetadata.OptimizedService> fullServiceMap = Collections.synchronizedMap(new TreeMap<>());
 
-    public void loadMetadata(String dir, String bizName) throws IOException {
+    public List<Map<String, OptimizedMetadata.OptimizedService>> loadMetadata(String bizName) throws IOException {
         List<String> serviceXmlList = new ArrayList<>();
         String folderPath = baseDir + bizName;
         File folder = new File(folderPath);
 
         if (!folder.exists()) {
             log.error("file path [{}] was not exists ", folderPath);
-            return;
+            return null;
         }
         File[] files = folder.listFiles();
         //files exists.
@@ -62,19 +62,20 @@ public class MetadataHandler {
                 }
 
             }
-            List<Map<String, OptimizedMetadata.OptimizedService>> services =
-                    serviceXmlList.stream().map(this::loadServicesMetadata).collect(Collectors.toList());
+            return serviceXmlList.stream().map(this::loadServicesMetadata).collect(Collectors.toList());
         }
+        return null;
     }
 
 
-    public Map<String, OptimizedMetadata.OptimizedService> loadServicesMetadata(String metadata) {
-        Map<String, OptimizedMetadata.OptimizedService> services = Collections.synchronizedMap(new TreeMap<>());
+    private Map<String, OptimizedMetadata.OptimizedService> loadServicesMetadata(String metadata) {
+        Map<String, OptimizedMetadata.OptimizedService> services = new TreeMap<>();
         log.info("fetched the  metadataClient, metadata:{}", metadata.substring(0, 50));
         try (StringReader reader = new StringReader(metadata)) {
             Service serviceData = JAXB.unmarshal(reader, Service.class);
             OptimizedMetadata.OptimizedService optimizedService = new OptimizedMetadata.OptimizedService(serviceData);
             services.put(optimizedService.getService().getName(), optimizedService);
+            processMetadataService(serviceData);
         } catch (Exception e) {
             log.error("metadata解析出错");
             log.error(e.getMessage(), e);
@@ -82,12 +83,11 @@ public class MetadataHandler {
             log.info(metadata);
         }
         log.info("metadata获取成功");
-
         return services;
     }
 
 
-    public void processMetadataService(Service service) {
+    private void processMetadataService(Service service) {
         //etc. 服务简名key ==> OrderService:1.0.0
         String simpleKey = String.format("%s:%s", service.name, service.getMeta().version);
         //etc. 服务全名key ==> com.today.api.order.service.OrderService:1.0.0
@@ -95,15 +95,12 @@ public class MetadataHandler {
 
         OptimizedMetadata.OptimizedService optimizedService = new OptimizedMetadata.OptimizedService(service);
 
-
         simpleServiceMap.put(simpleKey, optimizedService);
-
         fullServiceMap.put(fullKey, optimizedService);
-
         log.info("目前已存在的元数据 service size :  " + simpleServiceMap.size());
 
         StringBuilder logBuilder = new StringBuilder();
-        simpleServiceMap.forEach((k, v) -> logBuilder.append(k + ",  "));
+        simpleServiceMap.forEach((k, v) -> logBuilder.append(k).append(",  "));
         log.info("zk 服务实例列表: {}", logBuilder);
     }
 
