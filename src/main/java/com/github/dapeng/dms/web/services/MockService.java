@@ -14,6 +14,7 @@ import com.github.dapeng.dms.web.util.MockUtils;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Constants;
+import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.json.JSONException;
@@ -74,10 +75,16 @@ public class MockService {
     /**
      * add service-info
      */
-    public MockServiceVo addServiceInfo(String serviceName) {
-        MockServiceInfo serviceInfo = new MockServiceInfo(serviceName, new Timestamp(System.currentTimeMillis()));
+    public MockServiceVo addServiceInfo(ServiceAddRequest request) {
+        MockServiceInfo serviceInfo;
+        if (request.getMetadata() != null) {
+            MockMetadata metadata = metadataRepository.save(new MockMetadata(request.getServiceName(), request.getMetadata(), "1.0", 1));
+            serviceInfo = new MockServiceInfo(request.getServiceName(), metadata.getId(), new Timestamp(System.currentTimeMillis()));
+        } else {
+            serviceInfo = new MockServiceInfo(request.getServiceName(), 0L, new Timestamp(System.currentTimeMillis()));
+        }
         mockServiceRepository.save(serviceInfo);
-        return new MockServiceVo(serviceInfo.getId(), serviceName);
+        return new MockServiceVo(serviceInfo.getId(), request.getServiceName());
     }
 
     /**
@@ -170,7 +177,7 @@ public class MockService {
      * @param serviceId service_id
      */
     public List<MockMetadata> findMetadataByServiceId(Long serviceId) {
-       return metadataRepository.findByServiceId(serviceId);
+        return metadataRepository.findByServiceId(serviceId);
 
     }
 

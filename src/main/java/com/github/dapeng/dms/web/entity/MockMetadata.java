@@ -20,9 +20,9 @@ public class MockMetadata {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ApiModelProperty("服务ID")
+    /*@ApiModelProperty("服务ID")
     @Column(name = "service_id")
-    private long serviceId;
+    private long serviceId;*/
 
     @ApiModelProperty("服务名称")
     @Column(name = "service_name")
@@ -49,8 +49,8 @@ public class MockMetadata {
     /**
      * 新增元信息
      */
-    public MockMetadata(long serviceId, String serviceName, String metadata, String version, int type, Timestamp createdAt) {
-        this.serviceId = serviceId;
+    public MockMetadata(String serviceName, String metadata, String version, int type, Timestamp createdAt) {
+//        this.serviceId = serviceId;
         this.serviceName = serviceName;
         this.metadata = metadata;
         this.version = version;
@@ -61,8 +61,7 @@ public class MockMetadata {
     /**
      * 修改版本
      */
-    public MockMetadata(long serviceId, String serviceName, String metadata, String version, int type) {
-        this.serviceId = serviceId;
+    public MockMetadata(String serviceName, String metadata, String version, int type) {
         this.serviceName = serviceName;
         this.metadata = metadata;
         this.version = version;

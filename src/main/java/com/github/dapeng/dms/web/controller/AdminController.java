@@ -9,6 +9,7 @@ import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespEnum;
+import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
@@ -38,9 +39,14 @@ public class AdminController {
         this.mockService = mockService;
     }
 
+
+    // ------------服务单元------------------------- //
+    //                                             //
+    //                                            //
+    //------------------------------------------ //
     @ApiOperation(value = "显示目前已有的Mock服务Service")
     @GetMapping("/listServices")
-    public Object listMockService(Model model) throws InterruptedException {
+    public Object listMockService(Model model) {
         List<MockServiceInfo> mockServiceList = mockService.findMockServiceList();
         return mockServiceList.stream().map(serviceInfo -> {
             List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));
@@ -50,6 +56,20 @@ public class AdminController {
             List<MockMetadata> metadataList = mockService.findMetadataByServiceId(serviceInfo.getId());
             return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, metadataList, mockList);
         }).collect(Collectors.toList());
+    }
+
+    @ApiOperation(value = "添加一个Mock服务", notes = "注意服务名包全名")
+    @ApiResponse(code = 200, message = "返回添加成功后的MockServiceVo对象")
+    @PostMapping("/addService")
+    public Object addServiceInfo(@RequestBody ServiceAddRequest request) {
+        try {
+            return mockService.addServiceInfo(request);
+        } catch (Exception e) {
+            log.error("addService Error: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Resp.of(RespEnum.ERROR.getCode(), "addServiceInfo failed: " + e.getMessage()));
+        }
     }
 
 
@@ -68,21 +88,6 @@ public class AdminController {
             methodVoList.add(methodVo);
         });
         return methodVoList;
-    }
-
-    @ApiOperation(value = "添加一个Mock服务", notes = "注意服务名包全名")
-    @ApiResponse(code = 200, message = "返回添加成功后的MockServiceVo对象")
-    @PostMapping("/addService")
-    public Object addService(@RequestParam String serviceName) {
-        try {
-            return mockService.addServiceInfo(serviceName);
-        } catch (Exception e) {
-            log.error("addService Error: {}", e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Resp.of(RespEnum.ERROR.getCode(),
-                            "addService Fialed;" + e.getMessage()));
-        }
     }
 
 

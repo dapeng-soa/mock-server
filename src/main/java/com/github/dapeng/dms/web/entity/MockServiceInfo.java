@@ -35,4 +35,10 @@ public class MockServiceInfo {
         this.serviceName = serviceName;
         this.createdAt = createdAt;
     }
+
+    public MockServiceInfo(String serviceName, long metadataId, Timestamp createdAt) {
+        this.serviceName = serviceName;
+        this.metadataId = metadataId;
+        this.createdAt = createdAt;
+    }
 }
