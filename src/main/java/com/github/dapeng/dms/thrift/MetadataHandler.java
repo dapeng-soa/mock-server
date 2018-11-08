@@ -97,18 +97,13 @@ public class MetadataHandler {
 
         simpleServiceMap.put(simpleKey, optimizedService);
         fullServiceMap.put(fullKey, optimizedService);
-        log.info("目前已存在的元数据 service size :  " + simpleServiceMap.size());
+
+        log.info("存储服务 {} 元信息成功,目前已存在的元数据数量：", service.getName(), simpleServiceMap.size());
 
         StringBuilder logBuilder = new StringBuilder();
         simpleServiceMap.forEach((k, v) -> logBuilder.append(k).append(",  "));
-        log.info("zk 服务实例列表: {}", logBuilder);
+        log.info("服务实例列表: {}", logBuilder);
     }
-
-
-    public static void main(String[] args) throws IOException {
-
-    }
-
 }
 
 

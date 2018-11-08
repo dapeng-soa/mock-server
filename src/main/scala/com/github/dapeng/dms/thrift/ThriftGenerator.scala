@@ -12,7 +12,7 @@ import com.github.dapeng.code.parser.ThriftCodeParser
 object ThriftGenerator {
 
   def main(args: Array[String]): Unit = {
-    generateFiles("/Users/maple/ideaspace/dapeng/dapeng-mock-server2/file/thrifts", "/Users/maple/ideaspace/dapeng/dapeng-mock-server2/file/resources")
+    generateFiles("/Users/maple/ideaspace/dapeng/dapeng-mock-server/file/thrifts", "/Users/maple/ideaspace/dapeng/dapeng-mock-server/file/resources")
   }
 
 
