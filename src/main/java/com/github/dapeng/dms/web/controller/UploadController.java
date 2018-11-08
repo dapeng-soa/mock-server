@@ -198,9 +198,14 @@ public class UploadController {
     @RequestMapping("/startParse")
     public Object parseMetadata(String targetDir) {
         try {
-            return metadataHandler.loadMetadata(targetDir);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
+            List<Map<String, OptimizedMetadata.OptimizedService>> servicesMapList = metadataHandler.loadMetadata(targetDir);
+
+            if (servicesMapList == null) {
+                throw new IllegalArgumentException("根据路径 [" + targetDir + "] 未解析处元数据信息");
+            }
+            return servicesMapList;
+        } catch (Exception e) {
+            log.error(e.getMessage());
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Resp.of(RespEnum.ERROR.getCode(), "parseMetadata failed: " + e.getMessage()));

@@ -39,7 +39,8 @@ public class MetadataHandler {
 
         if (!folder.exists()) {
             log.error("file path [{}] was not exists ", folderPath);
-            return null;
+//            return null;
+            throw new IllegalArgumentException("根据[" + bizName + "]目标路径未找到元数据信息");
         }
         File[] files = folder.listFiles();
         //files exists.
@@ -62,15 +63,22 @@ public class MetadataHandler {
                 }
 
             }
-            return serviceXmlList.stream().map(this::loadServicesMetadata).collect(Collectors.toList());
+
+            List<Map<String, OptimizedMetadata.OptimizedService>> servicesMapList =
+                    serviceXmlList.stream().map(this::loadServicesMetadata).collect(Collectors.toList());
+            StringBuilder logBuilder = new StringBuilder();
+            simpleServiceMap.forEach((k, v) -> logBuilder.append(k).append(",  "));
+            log.info("服务实例列表:\n #### [{}] ####", logBuilder);
+            return servicesMapList;
         }
+        log.error("{} 路径下没有元数据信息解析", bizName);
         return null;
     }
 
 
     private Map<String, OptimizedMetadata.OptimizedService> loadServicesMetadata(String metadata) {
         Map<String, OptimizedMetadata.OptimizedService> services = new TreeMap<>();
-        log.info("fetched the  metadataClient, metadata:{}", metadata.substring(0, 50));
+//        log.info("fetched the  metadataClient, metadata:{}", metadata.substring(0, 50));
         try (StringReader reader = new StringReader(metadata)) {
             Service serviceData = JAXB.unmarshal(reader, Service.class);
             OptimizedMetadata.OptimizedService optimizedService = new OptimizedMetadata.OptimizedService(serviceData);
@@ -82,7 +90,6 @@ public class MetadataHandler {
 
             log.info(metadata);
         }
-        log.info("metadata获取成功");
         return services;
     }
 
@@ -97,12 +104,7 @@ public class MetadataHandler {
 
         simpleServiceMap.put(simpleKey, optimizedService);
         fullServiceMap.put(fullKey, optimizedService);
-
-        log.info("存储服务 {} 元信息成功,目前已存在的元数据数量：", service.getName(), simpleServiceMap.size());
-
-        StringBuilder logBuilder = new StringBuilder();
-        simpleServiceMap.forEach((k, v) -> logBuilder.append(k).append(",  "));
-        log.info("服务实例列表: {}", logBuilder);
+        log.info("存储服务 {} 元信息成功,目前已存在的元数据数量：{}", service.getName(), simpleServiceMap.size());
     }
 }
 
