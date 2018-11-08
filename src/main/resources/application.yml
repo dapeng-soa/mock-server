@@ -39,4 +39,12 @@ soa:
   zookeeper:
     host: 127.0.0.1:2181
 
-
+# spring actuator config
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"

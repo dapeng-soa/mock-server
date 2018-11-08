@@ -11,5 +11,5 @@ import java.util.List;
  */
 public interface MetadataRepository extends JpaRepository<MockMetadata, Long> {
 
-    List<MockMetadata> findByServiceId(long serviceId);
+    List<MockMetadata> findByServiceName(String serviceName);
 }

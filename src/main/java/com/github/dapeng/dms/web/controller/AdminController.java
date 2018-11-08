@@ -46,14 +46,14 @@ public class AdminController {
     //------------------------------------------ //
     @ApiOperation(value = "显示目前已有的Mock服务Service")
     @GetMapping("/listServices")
-    public Object listMockService(Model model) {
+    public Object listMockService() {
         List<MockServiceInfo> mockServiceList = mockService.findMockServiceList();
         return mockServiceList.stream().map(serviceInfo -> {
             List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));
             String serviceName = serviceInfo.getServiceName();
             String simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
             //metadataList
-            List<MockMetadata> metadataList = mockService.findMetadataByServiceId(serviceInfo.getId());
+            List<MockMetadata> metadataList = mockService.findMetadataByServiceName(serviceInfo.getServiceName());
             return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, metadataList, mockList);
         }).collect(Collectors.toList());
     }

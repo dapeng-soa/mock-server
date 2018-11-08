@@ -174,10 +174,10 @@ public class MockService {
     /**
      * metadata 信息
      *
-     * @param serviceId service_id
+     * @param serviceName serviceName
      */
-    public List<MockMetadata> findMetadataByServiceId(Long serviceId) {
-        return metadataRepository.findByServiceId(serviceId);
+    public List<MockMetadata> findMetadataByServiceName(String serviceName) {
+        return metadataRepository.findByServiceName(serviceName);
 
     }
 
