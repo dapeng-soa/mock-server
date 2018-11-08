@@ -1,5 +1,6 @@
 package com.github.dapeng.dms.web.vo;
 
+import com.github.dapeng.dms.web.entity.MockMetadata;
 import lombok.Data;
 
 import java.util.List;
@@ -16,6 +17,8 @@ public class MockServiceVo {
 
     private String simpleName;
 
+    private List<MockMetadata> metadata;
+
     private List<MockVo> mockVoList;
 
     public MockServiceVo(long serviceId, String service) {
@@ -29,6 +32,15 @@ public class MockServiceVo {
         this.serviceId = serviceId;
         this.service = service;
         this.simpleName = simpleName;
+        this.mockVoList = mockVoList;
+    }
+
+    public MockServiceVo(long serviceId, String service, String simpleName,
+                         List<MockMetadata> metadata, List<MockVo> mockVoList) {
+        this.serviceId = serviceId;
+        this.service = service;
+        this.simpleName = simpleName;
+        this.metadata = metadata;
         this.mockVoList = mockVoList;
     }
 }

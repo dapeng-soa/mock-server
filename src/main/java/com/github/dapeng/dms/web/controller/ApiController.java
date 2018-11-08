@@ -1,4 +1,4 @@
-package com.github.dapeng.dms.web.controller.controller;
+package com.github.dapeng.dms.web.controller;
 
 import com.github.dapeng.dms.mock.metadata.MetadataUtils;
 import com.github.dapeng.dms.web.services.MockService;

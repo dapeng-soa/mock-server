@@ -1,6 +1,7 @@
-package com.github.dapeng.dms.web.controller.controller;
+package com.github.dapeng.dms.web.controller;
 
 import com.github.dapeng.dms.web.entity.Mock;
+import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.MockServiceInfo;
 import com.github.dapeng.dms.web.services.MockService;
 import com.github.dapeng.dms.web.vo.MockMethodVo;
@@ -45,7 +46,9 @@ public class AdminController {
             List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));
             String serviceName = serviceInfo.getServiceName();
             String simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
-            return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, mockList);
+            //metadataList
+            List<MockMetadata> metadataList = mockService.findMetadataByServiceId(serviceInfo.getId());
+            return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, metadataList, mockList);
         }).collect(Collectors.toList());
     }
 

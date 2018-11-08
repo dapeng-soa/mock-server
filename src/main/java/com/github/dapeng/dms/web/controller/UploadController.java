@@ -1,4 +1,4 @@
-package com.github.dapeng.dms.web.controller.controller;
+package com.github.dapeng.dms.web.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;

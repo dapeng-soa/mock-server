@@ -1,8 +1,10 @@
 package com.github.dapeng.dms.web.services;
 
 import com.github.dapeng.dms.web.entity.Mock;
+import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.MockServiceInfo;
 import com.github.dapeng.dms.mock.matchers.HttpRequestMatcher;
+import com.github.dapeng.dms.web.repository.MetadataRepository;
 import com.github.dapeng.dms.web.repository.MockServiceRepository;
 import com.github.dapeng.dms.web.entity.MockContext;
 import com.github.dapeng.dms.mock.matchers.validator.JsonSchemaValidator;
@@ -37,11 +39,14 @@ public class MockService {
 
     private final MockRepository mockRepository;
     private final MockServiceRepository mockServiceRepository;
+    private final MetadataRepository metadataRepository;
 
 
-    public MockService(MockRepository mockRepository, MockServiceRepository mockServiceRepository) {
+    public MockService(MockRepository mockRepository, MockServiceRepository mockServiceRepository,
+                       MetadataRepository metadataRepository) {
         this.mockRepository = mockRepository;
         this.mockServiceRepository = mockServiceRepository;
+        this.metadataRepository = metadataRepository;
     }
 
 
@@ -156,6 +161,17 @@ public class MockService {
         Mock mock = MockUtils.optional(mockRepository.findById(mockVo.getId()), "根据mock id 没有查询到Mock信息");
         BeanUtils.copyProperties(mock, mockVo);
         log.info("更新 mock 信息完成");
+    }
+
+
+    /**
+     * metadata 信息
+     *
+     * @param serviceId service_id
+     */
+    public List<MockMetadata> findMetadataByServiceId(Long serviceId) {
+       return metadataRepository.findByServiceId(serviceId);
+
     }
 
 

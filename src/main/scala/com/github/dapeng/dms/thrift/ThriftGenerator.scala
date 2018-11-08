@@ -1,11 +1,8 @@
 package com.github.dapeng.dms.thrift
 
-import java.io.{File, FileNotFoundException, FilenameFilter}
-
-import com.github.dapeng.code.Scrooge
+import java.io.{File, FilenameFilter}
 import com.github.dapeng.code.generator.MetadataGenerator
 import com.github.dapeng.code.parser.ThriftCodeParser
-import javax.annotation.processing.FilerException
 
 /**
   *

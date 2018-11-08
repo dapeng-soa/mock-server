@@ -21,6 +21,9 @@ public class MockServiceInfo {
     @Column(name = "service")
     private String serviceName;
 
+    @Column(name = "metadata_id")
+    private long metadataId;
+
     @Column(name = "created_at")
     private Timestamp createdAt;
 
