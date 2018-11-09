@@ -4,14 +4,18 @@ import com.github.dapeng.dms.dto.MockServiceDto;
 import com.github.dapeng.dms.web.entity.Mock;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.MockServiceInfo;
+import com.github.dapeng.dms.web.services.DslMockService;
 import com.github.dapeng.dms.web.services.MockService;
 import com.github.dapeng.dms.web.vo.MockMethodVo;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespEnum;
-import com.github.dapeng.dms.web.vo.request.ListServiceRequestVo;
+import com.github.dapeng.dms.web.vo.request.ListServiceRequest;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
+import com.github.dapeng.dms.web.vo.response.DmsPageResp;
+import com.github.dapeng.dms.web.vo.response.ListServiceResp;
+import com.querydsl.core.QueryResults;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
@@ -36,8 +40,11 @@ public class AdminController {
 
     private final MockService mockService;
 
-    public AdminController(MockService mockService) {
+    private final DslMockService dslMockService;
+
+    public AdminController(MockService mockService, DslMockService dslMockService) {
         this.mockService = mockService;
+        this.dslMockService = dslMockService;
     }
 
 
@@ -47,16 +54,19 @@ public class AdminController {
     //------------------------------------------ //
     @ApiOperation(value = "显示目前已有的Mock服务Service")
     @PostMapping("/listServices")
-    public Object listMockService(@RequestBody ListServiceRequestVo requestVo) {
-        List<MockServiceDto> mockServiceList = mockService.findMockServiceListByCondition(requestVo);
-        return mockServiceList.stream().map(serviceInfo -> {
-            List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.id()));
-            String serviceName = serviceInfo.service();
+    public Object listMockService(@RequestBody ListServiceRequest requestVo) {
+        QueryResults<MockServiceInfo> results = dslMockService.queryByCondition(requestVo);
+        DmsPageResp dmsPageResp = new DmsPageResp(results.getOffset(), results.getLimit(), results.getTotal());
+        // fetch data
+        List<MockServiceVo> mockServiceVoList = results.getResults().stream().map(serviceInfo -> {
+            List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));
+            String serviceName = serviceInfo.getServiceName();
             String simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
             //metadataList
-            List<MockMetadata> metadataList = mockService.findMetadataByServiceName(serviceInfo.service());
-            return new MockServiceVo(serviceInfo.id(), serviceInfo.service(), simpleService, metadataList, mockList);
+            List<MockMetadata> metadataList = mockService.findMetadataByServiceName(serviceInfo.getServiceName());
+            return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, metadataList, mockList);
         }).collect(Collectors.toList());
+        return new ListServiceResp(mockServiceVoList, dmsPageResp);
     }
 
     @ApiOperation(value = "添加一个Mock服务", notes = "注意服务名包全名")

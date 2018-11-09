@@ -1,7 +1,7 @@
 package com.github.dapeng.dms.sql
 
 import com.github.dapeng.dms.dto.MockServiceDto
-import com.github.dapeng.dms.web.vo.request.ListServiceRequestVo
+import com.github.dapeng.dms.web.vo.request.ListServiceRequest
 import javax.sql.DataSource
 import org.slf4j.LoggerFactory
 import wangzx.scala_commons.sql._
@@ -23,9 +23,8 @@ object MockServerDao {
   /**
     * listServicesByCondition
     */
-  def listServicesByCondition(request: ListServiceRequestVo): java.util.List[MockServiceDto] = {
+  def listServicesByCondition(request: ListServiceRequest): java.util.List[MockServiceDto] = {
     val querySql =sql"""SELECT * FROM mock_service where 1=1 """
-
     val optionSql = List[SQLWithArgs](
       request.getServiceId.nullable(id => sql""" AND id = ${id.toLong}"""),
       request.getServiceName.nullable(fullName => sql" AND service = ${fullName} "),

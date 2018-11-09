@@ -15,7 +15,7 @@ import com.github.dapeng.dms.web.util.MockUtils;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Constants;
-import com.github.dapeng.dms.web.vo.request.ListServiceRequestVo;
+import com.github.dapeng.dms.web.vo.request.ListServiceRequest;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
 import com.github.dapeng.dms.dto.MockServiceDto;
 
@@ -127,7 +127,7 @@ public class MockService {
         return mockServiceRepository.findAll();
     }
 
-    public List<MockServiceDto> findMockServiceListByCondition(ListServiceRequestVo request) {
+    public List<MockServiceDto> findMockServiceListByCondition(ListServiceRequest request) {
         return MockServerDao.listServicesByCondition(request);
     }
 
