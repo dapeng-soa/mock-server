@@ -1,6 +1,7 @@
 package com.github.dapeng.dms.web.util;
 
 import com.github.dapeng.dms.web.controller.AdminController;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.stereotype.Component;
@@ -10,15 +11,11 @@ import org.springframework.stereotype.Component;
  * @since 2018-11-08 2:13 PM
  */
 @Component
+@Slf4j
 public class DestroyPostProcessor implements DestructionAwareBeanPostProcessor {
     @Override
     public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
-        System.out.println("beanName: " + beanName);
-        if (bean instanceof AdminController) {
-            Object o = ((AdminController) bean).listMockService();
-            System.out.println(o);
-        }
-
+        log.info("beanName: " + beanName);
     }
 
     @Override

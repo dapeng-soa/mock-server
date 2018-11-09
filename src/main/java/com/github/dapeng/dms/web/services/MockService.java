@@ -1,5 +1,7 @@
 package com.github.dapeng.dms.web.services;
 
+import com.github.dapeng.dms.dto.request.ListServiceRequest;
+import com.github.dapeng.dms.sql.MockServerDao;
 import com.github.dapeng.dms.web.entity.Mock;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.MockServiceInfo;
@@ -15,6 +17,8 @@ import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Constants;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
+import com.github.dapeng.dms.dto.MockServiceDto;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.json.JSONException;
@@ -121,6 +125,10 @@ public class MockService {
 
     public List<MockServiceInfo> findMockServiceList() {
         return mockServiceRepository.findAll();
+    }
+
+    public List<MockServiceDto> findMockServiceListByCondition(ListServiceRequest request) {
+        return MockServerDao.listServicesByCondition(request);
     }
 
 

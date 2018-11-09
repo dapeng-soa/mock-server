@@ -1,5 +1,8 @@
 package com.github.dapeng.dms.web.controller;
 
+import com.github.dapeng.dms.dto.MockServiceDto;
+import com.github.dapeng.dms.dto.request.Convert;
+import com.github.dapeng.dms.dto.request.ListServiceRequest;
 import com.github.dapeng.dms.web.entity.Mock;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.MockServiceInfo;
@@ -15,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -45,16 +47,17 @@ public class AdminController {
     //                                            //
     //------------------------------------------ //
     @ApiOperation(value = "显示目前已有的Mock服务Service")
-    @GetMapping("/listServices")
-    public Object listMockService() {
-        List<MockServiceInfo> mockServiceList = mockService.findMockServiceList();
+    @PostMapping("/listServices")
+    public Object listMockService(@RequestBody ListServiceRequest targetRequest) {
+        ListServiceRequest request = Convert.convertNull(targetRequest);
+        List<MockServiceDto> mockServiceList = mockService.findMockServiceListByCondition(request);
         return mockServiceList.stream().map(serviceInfo -> {
-            List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));
-            String serviceName = serviceInfo.getServiceName();
+            List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.id()));
+            String serviceName = serviceInfo.service();
             String simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
             //metadataList
-            List<MockMetadata> metadataList = mockService.findMetadataByServiceName(serviceInfo.getServiceName());
-            return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, metadataList, mockList);
+            List<MockMetadata> metadataList = mockService.findMetadataByServiceName(serviceInfo.service());
+            return new MockServiceVo(serviceInfo.id(), serviceInfo.service(), simpleService, metadataList, mockList);
         }).collect(Collectors.toList());
     }
 
