@@ -6,7 +6,7 @@ import lombok.Data;
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
  * @since 2018-11-09 1:18 PM
  */
-public class DmsPageRequest {
+public class DmsPageReq {
     /**
      * *
      * 查询的开始序号（序号从零开始）

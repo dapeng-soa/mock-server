@@ -1,6 +1,5 @@
 package com.github.dapeng.dms.web.controller;
 
-import com.github.dapeng.dms.dto.MockServiceDto;
 import com.github.dapeng.dms.web.entity.Mock;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.MockServiceInfo;
@@ -11,7 +10,7 @@ import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespEnum;
-import com.github.dapeng.dms.web.vo.request.ListServiceRequest;
+import com.github.dapeng.dms.web.vo.request.ListServiceReq;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
 import com.github.dapeng.dms.web.vo.response.DmsPageResp;
 import com.github.dapeng.dms.web.vo.response.ListServiceResp;
@@ -54,7 +53,7 @@ public class AdminController {
     //------------------------------------------ //
     @ApiOperation(value = "显示目前已有的Mock服务Service")
     @PostMapping("/listServices")
-    public Object listMockService(@RequestBody ListServiceRequest requestVo) {
+    public Object listMockService(@RequestBody ListServiceReq requestVo) {
         QueryResults<MockServiceInfo> results = dslMockService.queryByCondition(requestVo);
         DmsPageResp dmsPageResp = new DmsPageResp(results.getOffset(), results.getLimit(), results.getTotal());
         // fetch data

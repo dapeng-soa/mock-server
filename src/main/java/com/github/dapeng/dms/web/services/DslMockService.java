@@ -5,8 +5,8 @@ import com.github.dapeng.dms.web.entity.QMockServiceInfo;
 import com.github.dapeng.dms.web.repository.MetadataRepository;
 import com.github.dapeng.dms.web.repository.MockRepository;
 import com.github.dapeng.dms.web.repository.MockServiceRepository;
-import com.github.dapeng.dms.web.vo.request.DmsPageRequest;
-import com.github.dapeng.dms.web.vo.request.ListServiceRequest;
+import com.github.dapeng.dms.web.vo.request.DmsPageReq;
+import com.github.dapeng.dms.web.vo.request.ListServiceReq;
 import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -54,7 +54,7 @@ public class DslMockService implements InitializingBean {
      *
      * @return
      */
-    public QueryResults<MockServiceInfo> queryByCondition(ListServiceRequest request) {
+    public QueryResults<MockServiceInfo> queryByCondition(ListServiceReq request) {
         //使用 querydsl 查询
         QMockServiceInfo qService = QMockServiceInfo.mockServiceInfo;
         //查询并返回结果集
@@ -68,7 +68,7 @@ public class DslMockService implements InitializingBean {
         }
 
         if (request.getPageRequest() != null) {
-            DmsPageRequest dmsPage = request.getPageRequest();
+            DmsPageReq dmsPage = request.getPageRequest();
             //分页排序
             PageRequest pageRequest = PageRequest.of(dmsPage.getStart(), dmsPage.getLimit());
             serviceQuery.offset(pageRequest.getOffset()).limit(pageRequest.getPageSize());
@@ -87,7 +87,7 @@ public class DslMockService implements InitializingBean {
 
     /*
 
-    public List<MockServiceInfo> queryByCondition(ListServiceRequest request) {
+    public List<MockServiceInfo> queryByCondition(ListServiceReq request) {
         //使用 querydsl 查询
         QMockServiceInfo qService = QMockServiceInfo.mockServiceInfo;
         //查询并返回结果集
@@ -111,7 +111,7 @@ public class DslMockService implements InitializingBean {
 
         if (request.getPageRequest() != null) {
             //
-            DmsPageRequest dmsPageRequest = request.getPageRequest();
+            DmsPageReq dmsPageRequest = request.getPageRequest();
 //            Sort sort = new Sort(Sort.Direction.DESC,"createTime"); //创建时间降序排序
             Pageable pageable = PageRequest.of(dmsPageRequest.getStart(), dmsPageRequest.getLimit());
             serviceQuery.orderBy(qService.id.desc());
