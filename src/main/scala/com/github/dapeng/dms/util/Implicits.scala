@@ -1,5 +1,7 @@
 package com.github.dapeng.dms.util
 
+import wangzx.scala_commons.sql.SQLWithArgs
+
 /**
   *
   * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
@@ -18,14 +20,13 @@ object Implicits {
 
   }
 
-  implicit class Nullable[T](opt: Option[T]) {
-
-    import wangzx.scala_commons.sql._
-
-    def nullable(): Option[T] = opt match {
-      case Some(value) => Option.apply(value)
-      case None => Option.empty[T]
-      case null => Option.empty[T]
+  implicit class Nullable[T](opt: T) {
+    def nullable(op: T ⇒ SQLWithArgs): SQLWithArgs = {
+      if (opt != null) {
+        op(opt)
+      } else {
+        SQLWithArgs("", Seq.empty)
+      }
     }
 
   }

@@ -1,6 +1,5 @@
 package com.github.dapeng.dms.web.services;
 
-import com.github.dapeng.dms.dto.request.ListServiceRequest;
 import com.github.dapeng.dms.sql.MockServerDao;
 import com.github.dapeng.dms.web.entity.Mock;
 import com.github.dapeng.dms.web.entity.MockMetadata;
@@ -16,6 +15,7 @@ import com.github.dapeng.dms.web.util.MockUtils;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Constants;
+import com.github.dapeng.dms.web.vo.request.ListServiceRequestVo;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
 import com.github.dapeng.dms.dto.MockServiceDto;
 
@@ -127,7 +127,7 @@ public class MockService {
         return mockServiceRepository.findAll();
     }
 
-    public List<MockServiceDto> findMockServiceListByCondition(ListServiceRequest request) {
+    public List<MockServiceDto> findMockServiceListByCondition(ListServiceRequestVo request) {
         return MockServerDao.listServicesByCondition(request);
     }
 

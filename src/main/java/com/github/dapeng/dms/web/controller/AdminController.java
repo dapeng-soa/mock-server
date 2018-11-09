@@ -1,8 +1,6 @@
 package com.github.dapeng.dms.web.controller;
 
 import com.github.dapeng.dms.dto.MockServiceDto;
-import com.github.dapeng.dms.dto.request.Convert;
-import com.github.dapeng.dms.dto.request.ListServiceRequest;
 import com.github.dapeng.dms.web.entity.Mock;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.MockServiceInfo;
@@ -12,6 +10,7 @@ import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespEnum;
+import com.github.dapeng.dms.web.vo.request.ListServiceRequestVo;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
@@ -48,9 +47,8 @@ public class AdminController {
     //------------------------------------------ //
     @ApiOperation(value = "显示目前已有的Mock服务Service")
     @PostMapping("/listServices")
-    public Object listMockService(@RequestBody ListServiceRequest targetRequest) {
-        ListServiceRequest request = Convert.convertNull(targetRequest);
-        List<MockServiceDto> mockServiceList = mockService.findMockServiceListByCondition(request);
+    public Object listMockService(@RequestBody ListServiceRequestVo requestVo) {
+        List<MockServiceDto> mockServiceList = mockService.findMockServiceListByCondition(requestVo);
         return mockServiceList.stream().map(serviceInfo -> {
             List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.id()));
             String serviceName = serviceInfo.service();

@@ -1,10 +1,11 @@
 package com.github.dapeng.dms.sql
 
 import com.github.dapeng.dms.dto.MockServiceDto
-import com.github.dapeng.dms.dto.request.ListServiceRequest
+import com.github.dapeng.dms.web.vo.request.ListServiceRequestVo
 import javax.sql.DataSource
 import org.slf4j.LoggerFactory
 import wangzx.scala_commons.sql._
+
 import scala.collection.JavaConverters._
 
 /**
@@ -22,19 +23,24 @@ object MockServerDao {
   /**
     * listServicesByCondition
     */
-  def listServicesByCondition(request: ListServiceRequest): java.util.List[MockServiceDto] = {
+  def listServicesByCondition(request: ListServiceRequestVo): java.util.List[MockServiceDto] = {
     val querySql =sql"""SELECT * FROM mock_service where 1=1 """
 
     val optionSql = List[SQLWithArgs](
-      request.serviceId.optional(id => sql"""AND id = ${id}"""),
-      request.serviceName.optional(fullName => sql" AND service = ${fullName} "),
-      request.simpleName.optional(simpleName => sql" AND service like ${simpleName} ")
+      request.getServiceId.nullable(id => sql""" AND id = ${id.toLong}"""),
+      request.getServiceName.nullable(fullName => sql" AND service = ${fullName} "),
+      request.getSimpleName.nullable(simpleName => sql" AND service like concat('%',${simpleName},'%')")
     ).reduceLeft(_ + _)
 
-    val limitSql = request.pageRequest.optional(page => sql" LIMIT ${page.start} , ${page.limit}")
-    val sortSql = request.pageRequest.optional(page ⇒ page.sortFields.optional(sort ⇒ sql"ORDER BY sort DESC "))
+    val pageRequest = request.getPageRequest
+
+    val limitSql = if (pageRequest != null) {
+      request.getPageRequest.nullable(page => sql"limit  ${page.getStart.toInt}, ${page.getLimit.toInt}")
+    } else SQLWithArgs("", Seq.empty)
+
+    //    val sortSql = request.pageRequest.optional(page ⇒ page.sortFields.optional(sort ⇒ sql"ORDER BY sort DESC "))
     //execute
-    val executeSql = querySql + optionSql + limitSql + sortSql
+    val executeSql = querySql + optionSql + limitSql
     log.info("listServicesByCondition: executeSql sql: {}", executeSql)
     val serviceList: List[MockServiceDto] = dataSource.rows[MockServiceDto](executeSql)
 
