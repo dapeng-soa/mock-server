@@ -2,15 +2,14 @@ package com.github.dapeng.dms.web.controller;
 
 import com.github.dapeng.dms.web.entity.Mock;
 import com.github.dapeng.dms.web.entity.MockMetadata;
-import com.github.dapeng.dms.web.entity.MockServiceInfo;
+import com.github.dapeng.dms.web.entity.MockService;
 import com.github.dapeng.dms.web.services.DslMockService;
-import com.github.dapeng.dms.web.services.MockService;
-import com.github.dapeng.dms.web.vo.MockMethodVo;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespEnum;
-import com.github.dapeng.dms.web.vo.request.ListServiceReq;
+import com.github.dapeng.dms.web.vo.request.QueryMethodReq;
+import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
 import com.github.dapeng.dms.web.vo.response.DmsPageResp;
 import com.github.dapeng.dms.web.vo.response.ListServiceResp;
@@ -22,9 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -37,11 +34,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AdminController {
 
-    private final MockService mockService;
+    private final com.github.dapeng.dms.web.services.MockService mockService;
 
     private final DslMockService dslMockService;
 
-    public AdminController(MockService mockService, DslMockService dslMockService) {
+    public AdminController(com.github.dapeng.dms.web.services.MockService mockService, DslMockService dslMockService) {
         this.mockService = mockService;
         this.dslMockService = dslMockService;
     }
@@ -53,9 +50,8 @@ public class AdminController {
     //------------------------------------------ //
     @ApiOperation(value = "显示目前已有的Mock服务Service")
     @PostMapping("/listServices")
-    public Object listMockService(@RequestBody ListServiceReq requestVo) {
-        QueryResults<MockServiceInfo> results = dslMockService.queryByCondition(requestVo);
-        DmsPageResp dmsPageResp = new DmsPageResp(results.getOffset(), results.getLimit(), results.getTotal());
+    public Object listMockService(@RequestBody QueryServiceReq requestVo) {
+        QueryResults<MockService> results = dslMockService.queryServiceByCondition(requestVo);
         // fetch data
         List<MockServiceVo> mockServiceVoList = results.getResults().stream().map(serviceInfo -> {
             List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));
@@ -65,7 +61,12 @@ public class AdminController {
             List<MockMetadata> metadataList = mockService.findMetadataByServiceName(serviceInfo.getServiceName());
             return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, metadataList, mockList);
         }).collect(Collectors.toList());
-        return new ListServiceResp(mockServiceVoList, dmsPageResp);
+
+        if (requestVo.getPageRequest() != null) {
+            DmsPageResp dmsPageResp = new DmsPageResp(results.getOffset(), results.getLimit(), results.getTotal());
+            return new ListServiceResp(mockServiceVoList, dmsPageResp);
+        }
+        return new ListServiceResp(mockServiceVoList);
     }
 
     @ApiOperation(value = "添加一个Mock服务", notes = "注意服务名包全名")
@@ -83,22 +84,14 @@ public class AdminController {
     }
 
 
-    @ApiOperation(value = "显示指定服务下面的已配置Mock的方法或者接口", notes = "某个Service微服务下的已Mock方法列表")
-    @PostMapping(value = "/listMethods")
-    public Object listMethodsByService(@RequestParam long serviceId) {
-        List<Mock> mockList = mockService.findMockByServiceId(serviceId);
-        //lambda List进行分组
-        Map<String, List<Mock>> methodMap = mockList.stream().collect(Collectors.groupingBy(Mock::getMethodName));
-
-        List<MockMethodVo> methodVoList = new ArrayList<>();
-        methodMap.forEach((method, mocks) -> {
-            Mock mock = mocks.get(0);
-            MockMethodVo methodVo = new MockMethodVo(mock.getServiceId(), mock.getServiceName(),
-                    mock.getMethodName(), mock.getHttpMethod(), "", mocks);
-            methodVoList.add(methodVo);
-        });
-        return methodVoList;
+    @ApiOperation(value = "接口管理,显示已配置的接口，可以根据条件查询", notes = "某个Service微服务下的已Mock方法列表")
+    @PostMapping(value = "/listInterfaces")
+    public Object listMethodsByService(@RequestBody QueryMethodReq request) {
+        return dslMockService.queryMethodByCondition(request);
     }
+
+
+
 
 
     @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")

@@ -3,7 +3,6 @@ package com.github.dapeng.dms.web.services;
 import com.github.dapeng.dms.sql.MockServerDao;
 import com.github.dapeng.dms.web.entity.Mock;
 import com.github.dapeng.dms.web.entity.MockMetadata;
-import com.github.dapeng.dms.web.entity.MockServiceInfo;
 import com.github.dapeng.dms.mock.matchers.HttpRequestMatcher;
 import com.github.dapeng.dms.web.repository.MetadataRepository;
 import com.github.dapeng.dms.web.repository.MockServiceRepository;
@@ -15,7 +14,7 @@ import com.github.dapeng.dms.web.util.MockUtils;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Constants;
-import com.github.dapeng.dms.web.vo.request.ListServiceReq;
+import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
 import com.github.dapeng.dms.dto.MockServiceDto;
 
@@ -80,12 +79,12 @@ public class MockService {
      * add service-info
      */
     public MockServiceVo addServiceInfo(ServiceAddRequest request) {
-        MockServiceInfo serviceInfo;
+        com.github.dapeng.dms.web.entity.MockService serviceInfo;
         if (request.getMetadata() != null) {
             MockMetadata metadata = metadataRepository.save(new MockMetadata(request.getServiceName(), request.getMetadata(), "1.0", 1));
-            serviceInfo = new MockServiceInfo(request.getServiceName(), metadata.getId(), new Timestamp(System.currentTimeMillis()));
+            serviceInfo = new com.github.dapeng.dms.web.entity.MockService(request.getServiceName(), metadata.getId(), new Timestamp(System.currentTimeMillis()));
         } else {
-            serviceInfo = new MockServiceInfo(request.getServiceName(), 0L, new Timestamp(System.currentTimeMillis()));
+            serviceInfo = new com.github.dapeng.dms.web.entity.MockService(request.getServiceName(), 0L, new Timestamp(System.currentTimeMillis()));
         }
         mockServiceRepository.save(serviceInfo);
         return new MockServiceVo(serviceInfo.getId(), request.getServiceName());
@@ -103,10 +102,10 @@ public class MockService {
         //convert
         String mockCompileJson = MockUtils.convertJsonValueToPatternJson(mockExpress);
 
-        MockServiceInfo serviceInfo = mockServiceRepository.findByServiceName(service);
+        com.github.dapeng.dms.web.entity.MockService serviceInfo = mockServiceRepository.findByServiceName(service);
 
         if (serviceInfo == null) {
-            serviceInfo = mockServiceRepository.save(new MockServiceInfo(service, new Timestamp(System.currentTimeMillis())));
+            serviceInfo = mockServiceRepository.save(new com.github.dapeng.dms.web.entity.MockService(service, new Timestamp(System.currentTimeMillis())));
         }
         String mockKey = MockUtils.combineMockKey(service, method, version);
         Mock latestMock = mockRepository.findMockByMockKeyOrderBySortDesc(mockKey);
@@ -123,11 +122,11 @@ public class MockService {
     }
 
 
-    public List<MockServiceInfo> findMockServiceList() {
+    public List<com.github.dapeng.dms.web.entity.MockService> findMockServiceList() {
         return mockServiceRepository.findAll();
     }
 
-    public List<MockServiceDto> findMockServiceListByCondition(ListServiceReq request) {
+    public List<MockServiceDto> findMockServiceListByCondition(QueryServiceReq request) {
         return MockServerDao.listServicesByCondition(request);
     }
 
@@ -168,7 +167,7 @@ public class MockService {
     }
 
     public void updateService(MockServiceVo mockServiceVo) {
-        MockServiceInfo serviceInfo = mockServiceRepository.findById(mockServiceVo.getServiceId());
+        com.github.dapeng.dms.web.entity.MockService serviceInfo = mockServiceRepository.findById(mockServiceVo.getServiceId());
         serviceInfo.setServiceName(mockServiceVo.getService());
     }
 

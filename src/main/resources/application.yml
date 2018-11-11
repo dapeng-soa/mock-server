@@ -16,8 +16,10 @@ spring:
   jpa:
     show-sql: true
     generate-ddl: true
-    hibernate:
-      format-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
 
   #    database: mysql
 
@@ -51,9 +53,9 @@ management:
     web:
       exposure:
         include: "*"
-logging:
-  level:
-    org.apache.zookeeper: info
-    com.zaxxer: info
-    sun.rmi: info
-    root: debug
+#logging:
+#  level:
+#    org.apache.zookeeper: info
+#    com.zaxxer: info
+#    sun.rmi: info
+#    root: debug

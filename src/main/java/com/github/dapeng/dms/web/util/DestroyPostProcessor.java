@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class DestroyPostProcessor implements DestructionAwareBeanPostProcessor {
     @Override
     public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
-        log.info("beanName: " + beanName);
+        log.info("Spring Container destroyed, access beanName: " + beanName);
     }
 
     @Override

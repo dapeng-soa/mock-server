@@ -13,29 +13,23 @@ import java.util.List;
  */
 @Data
 public class MockMethodVo {
-    private long serviceId;
+    private long id;
 
-    private String serviceName;
+    private String simpleService;
 
-    private String simpleName;
-
-    private String methodName;
+    private String method;
 
     private String requestType;
 
     private String url;
 
-    private List<Mock> mockList;
-
-
-    public MockMethodVo(long serviceId, String serviceName, String methodName, String requestType, String url, List<Mock> mockList) {
-        this.serviceId = serviceId;
-        this.serviceName = serviceName;
-        this.simpleName = serviceName.substring(serviceName.lastIndexOf(".") + 1);
-        this.methodName = methodName;
+    public MockMethodVo(long id, String simpleService, String method, String requestType, String url) {
+        this.id = id;
+        this.simpleService = simpleService.substring(simpleService.lastIndexOf(".") + 1);
+        this.method = method;
         this.requestType = requestType;
-        this.url = String.format("/api/%s/%s/%s", serviceName, "1.0.0", methodName);
-        this.mockList = mockList;
-
+        this.url = url;
+//        this.url = String.format("/api/%s/%s/%s", serviceName, "1.0.0", methodName);
     }
+
 }

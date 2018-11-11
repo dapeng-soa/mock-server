@@ -11,11 +11,14 @@ import java.util.List;
  */
 @Data
 public class MockServiceVo {
+
     private long serviceId;
 
     private String service;
 
     private String simpleName;
+
+    private String version;
 
     private List<MockMetadata> metadata;
 

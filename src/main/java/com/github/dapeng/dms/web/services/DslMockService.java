@@ -1,12 +1,17 @@
 package com.github.dapeng.dms.web.services;
 
-import com.github.dapeng.dms.web.entity.MockServiceInfo;
-import com.github.dapeng.dms.web.entity.QMockServiceInfo;
+import com.github.dapeng.dms.web.entity.*;
+import com.github.dapeng.dms.web.entity.MockService;
 import com.github.dapeng.dms.web.repository.MetadataRepository;
 import com.github.dapeng.dms.web.repository.MockRepository;
 import com.github.dapeng.dms.web.repository.MockServiceRepository;
+import com.github.dapeng.dms.web.vo.MockMethodVo;
+import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.web.vo.request.DmsPageReq;
-import com.github.dapeng.dms.web.vo.request.ListServiceReq;
+import com.github.dapeng.dms.web.vo.request.QueryMethodReq;
+import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
+import com.github.dapeng.dms.web.vo.response.DmsPageResp;
+import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
 import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -16,6 +21,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <a href="https://zhuanlan.zhihu.com/p/24778422?refer=dreawer">JPA QueryDsl 操作</a>
@@ -51,14 +58,12 @@ public class DslMockService implements InitializingBean {
 
     /**
      * 查询全部数据并根据id倒序
-     *
-     * @return
      */
-    public QueryResults<MockServiceInfo> queryByCondition(ListServiceReq request) {
+    public QueryResults<MockService> queryServiceByCondition(QueryServiceReq request) {
         //使用 querydsl 查询
-        QMockServiceInfo qService = QMockServiceInfo.mockServiceInfo;
+        QMockService qService = QMockService.mockService;
         //查询并返回结果集
-        JPAQuery<MockServiceInfo> serviceQuery = queryFactory.selectFrom(qService);
+        JPAQuery<MockService> serviceQuery = queryFactory.selectFrom(qService);
 
         if (request.getSimpleName() != null) {
             serviceQuery.where(qService.serviceName.like("%" + request.getSimpleName() + "%"));
@@ -73,25 +78,66 @@ public class DslMockService implements InitializingBean {
             PageRequest pageRequest = PageRequest.of(dmsPage.getStart(), dmsPage.getLimit());
             serviceQuery.offset(pageRequest.getOffset()).limit(pageRequest.getPageSize());
         }
-        QueryResults<MockServiceInfo> results = serviceQuery.orderBy(qService.id.asc()).fetchResults();
-        log.info("results: {}", results.toString());
-        return results;
+        return serviceQuery.orderBy(qService.id.asc()).fetchResults();
+    }
+
+    /**
+     * query methods
+     *
+     * @param request
+     */
+    public QueryMethodResp queryMethodByCondition(QueryMethodReq request) {
+        QMockMethod qMethod = QMockMethod.mockMethod;
+        JPAQuery<MockMethod> serviceQuery = queryFactory.selectFrom(qMethod);
+
+        if (request.getServiceName() != null) {
+            serviceQuery.where(qMethod.service.like("%" + request.getServiceName() + "%"));
+        }
+        if (request.getMethodName() != null) {
+            serviceQuery.where(qMethod.method.eq(request.getMethodName()));
+        }
+
+        if (request.getPageRequest() != null) {
+            DmsPageReq dmsPage = request.getPageRequest();
+            //分页排序
+            PageRequest pageRequest = PageRequest.of(dmsPage.getStart(), dmsPage.getLimit());
+            serviceQuery.offset(pageRequest.getOffset()).limit(pageRequest.getPageSize());
+        }
+        QueryResults<MockMethod> results = serviceQuery.orderBy(qMethod.id.asc()).fetchResults();
+        log.info("MockMethod results: {}", results.toString());
+
+        List<MockMethodVo> mockMethodVoList = results.getResults().stream()
+                .map(m -> new MockMethodVo(m.getId(), m.getService(), m.getMethod(), m.getRequestType(), m.getUrl()))
+                .collect(Collectors.toList());
+
+        if (request.getPageRequest() != null) {
+            DmsPageResp dmsPageResp = new DmsPageResp(results.getOffset(), results.getLimit(), results.getTotal());
+            return new QueryMethodResp(mockMethodVoList, dmsPageResp);
+        }
+        return new QueryMethodResp(mockMethodVoList);
     }
 
 
-
-
-
-
+    /**
+     * transfer Mock POJO to MockVo
+     */
+    private List<MockVo> transferMockVo(List<Mock> mockList) {
+        return mockList.stream().map(mock -> {
+            String service = mock.getServiceName();
+            String simpleService = service.substring(service.lastIndexOf(".") + 1);
+            return new MockVo(mock.getId(), mock.getServiceName(), mock.getMethodName(), mock.getVersion(),
+                    mock.getHttpMethod(), mock.getMockExpress(), mock.getData(), mock.getServiceId(), mock.getSort());
+        }).collect(Collectors.toList());
+    }
 
 
     /*
 
-    public List<MockServiceInfo> queryByCondition(ListServiceReq request) {
+    public List<MockService> queryServiceByCondition(QueryServiceReq request) {
         //使用 querydsl 查询
         QMockServiceInfo qService = QMockServiceInfo.mockServiceInfo;
         //查询并返回结果集
-        JPAQuery<MockServiceInfo> serviceQuery = queryFactory.selectFrom(qService);
+        JPAQuery<MockService> serviceQuery = queryFactory.selectFrom(qService);
 
         //该Predicate为querydsl下的类,支持嵌套组装复杂查询条件
 //        Predicate predicate = qService.id.longValue().lt(3).and(qService.serviceName.like("shanghai"));
