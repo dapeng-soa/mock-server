@@ -21,6 +21,12 @@ public class DmsPageReq {
 
     private Integer limit;
 
+//    private Integer results;
+
+//    private Integer pageIndex;
+
+
+
     /**
      * *
      * 排序的字段
@@ -38,4 +44,12 @@ public class DmsPageReq {
     public String getSortFields() {
         return sortFields;
     }
+
+//    public Integer getResults() {
+//        return results;
+//    }
+//
+//    public Integer getPageIndex() {
+//        return pageIndex;
+//    }
 }

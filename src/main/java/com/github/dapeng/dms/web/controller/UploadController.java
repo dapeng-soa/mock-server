@@ -2,7 +2,7 @@ package com.github.dapeng.dms.web.controller;
 
 import com.github.dapeng.dms.thrift.MetadataHandler;
 import com.github.dapeng.dms.util.Resp;
-import com.github.dapeng.dms.util.RespEnum;
+import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.json.OptimizedMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -206,9 +206,7 @@ public class UploadController {
             return servicesMapList;
         } catch (Exception e) {
             log.error(e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Resp.of(RespEnum.ERROR.getCode(), "parseMetadata failed: " + e.getMessage()));
+            return Resp.error(RespUtil.MOCK_ERROR, "parseMetadata failed: " + e.getMessage());
         }
 
     }

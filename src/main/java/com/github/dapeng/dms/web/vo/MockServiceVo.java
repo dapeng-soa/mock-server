@@ -22,28 +22,29 @@ public class MockServiceVo {
 
     private List<MockMetadata> metadata;
 
-    private List<MockVo> mockVoList;
+    private long mockMethodSize;
 
     public MockServiceVo(long serviceId, String service) {
         this.serviceId = serviceId;
         this.service = service;
         this.simpleName = service.substring(service.lastIndexOf(".") + 1);
-        this.mockVoList = null;
+        this.mockMethodSize = 0L;
     }
 
-    public MockServiceVo(long serviceId, String service, String simpleName, List<MockVo> mockVoList) {
+    public MockServiceVo(long serviceId, String service, String simpleName, long mockMethodSize) {
         this.serviceId = serviceId;
         this.service = service;
         this.simpleName = simpleName;
-        this.mockVoList = mockVoList;
+        this.mockMethodSize = mockMethodSize;
     }
 
-    public MockServiceVo(long serviceId, String service, String simpleName,
-                         List<MockMetadata> metadata, List<MockVo> mockVoList) {
+    public MockServiceVo(long serviceId, String service, String simpleName, String version,
+                         List<MockMetadata> metadata, long mockMethodSize) {
         this.serviceId = serviceId;
         this.service = service;
         this.simpleName = simpleName;
+        this.version = version;
         this.metadata = metadata;
-        this.mockVoList = mockVoList;
+        this.mockMethodSize = mockMethodSize;
     }
 }

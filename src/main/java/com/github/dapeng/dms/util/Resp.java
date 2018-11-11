@@ -1,5 +1,6 @@
 package com.github.dapeng.dms.util;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
@@ -7,32 +8,38 @@ import lombok.Data;
  * @since 2018-10-31 4:17 PM
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Resp<T> {
-    private int code;
-    private String msg;
-    private T context;
+    private int status;
 
-    private Resp(int code, String msg) {
-        this.code = code;
-        this.msg = msg;
+    private T success;
+
+    private String responseCode;
+
+    private T responseMsg;
+
+    private Resp(T success) {
+        this.status = 1;
+        this.success = success;
     }
 
-    private Resp(int code, String msg, T context) {
-        this.code = code;
-        this.context = context;
-        this.msg = msg;
+    private Resp(String responseCode, T responseMsg) {
+        this.status = 0;
+        this.responseCode = responseCode;
+        this.responseMsg = responseMsg;
     }
 
-    public static Resp of(int code, String msg) {
-        return new Resp(code, msg);
+    public static <T> Resp success(T success) {
+        return new Resp<>(success);
     }
 
-    public static <T> Resp of(int code, String msg, T context) {
-        return new Resp(code, msg, context);
+    public static <T> Resp error(String responseCode, T responseMsg) {
+        return new Resp<>(responseCode, responseMsg);
     }
 
-    public static Resp of(RespEnum respEnum) {
-        return new Resp(respEnum.getCode(), respEnum.getMsg());
-    }
 }
 
+//{
+//   "success": "*******************收到的消息为： Hello(maple,None) HelloServiceImpl version=2.0.1",
+//   "status": 1
+//}

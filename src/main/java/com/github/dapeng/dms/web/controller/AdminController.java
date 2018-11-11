@@ -7,12 +7,14 @@ import com.github.dapeng.dms.web.services.DslMockService;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
-import com.github.dapeng.dms.util.RespEnum;
+import com.github.dapeng.dms.util.RespUtil;
+import com.github.dapeng.dms.web.vo.request.DmsPageReq;
 import com.github.dapeng.dms.web.vo.request.QueryMethodReq;
 import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
 import com.github.dapeng.dms.web.vo.response.DmsPageResp;
 import com.github.dapeng.dms.web.vo.response.ListServiceResp;
+import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
 import com.querydsl.core.QueryResults;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
+ * todo 后期使用 Aspect 切面简化代码 并优化。
+ *
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
  * @since 2018-10-31 4:13 PM
  */
@@ -43,30 +47,14 @@ public class AdminController {
         this.dslMockService = dslMockService;
     }
 
-
-    // ------------服务单元------------------------- //
-    //                                             //
-    //                                            //
-    //------------------------------------------ //
     @ApiOperation(value = "显示目前已有的Mock服务Service")
     @PostMapping("/listServices")
     public Object listMockService(@RequestBody QueryServiceReq requestVo) {
-        QueryResults<MockService> results = dslMockService.queryServiceByCondition(requestVo);
-        // fetch data
-        List<MockServiceVo> mockServiceVoList = results.getResults().stream().map(serviceInfo -> {
-            List<MockVo> mockList = transferMockVo(mockService.findMockByServiceId(serviceInfo.getId()));
-            String serviceName = serviceInfo.getServiceName();
-            String simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
-            //metadataList
-            List<MockMetadata> metadataList = mockService.findMetadataByServiceName(serviceInfo.getServiceName());
-            return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(), simpleService, metadataList, mockList);
-        }).collect(Collectors.toList());
-
-        if (requestVo.getPageRequest() != null) {
-            DmsPageResp dmsPageResp = new DmsPageResp(results.getOffset(), results.getLimit(), results.getTotal());
-            return new ListServiceResp(mockServiceVoList, dmsPageResp);
+        try {
+            return dslMockService.queryServiceByCondition(requestVo);
+        } catch (Exception e) {
+            return Resp.error("ERROR-ADMIN-500", e.getMessage());
         }
-        return new ListServiceResp(mockServiceVoList);
     }
 
     @ApiOperation(value = "添加一个Mock服务", notes = "注意服务名包全名")
@@ -74,12 +62,11 @@ public class AdminController {
     @PostMapping("/addService")
     public Object addServiceInfo(@RequestBody ServiceAddRequest request) {
         try {
-            return mockService.addServiceInfo(request);
+            MockServiceVo serviceVo = mockService.addServiceInfo(request);
+            return Resp.success(serviceVo);
         } catch (Exception e) {
             log.error("addService Error: {}", e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Resp.of(RespEnum.ERROR.getCode(), "addServiceInfo failed: " + e.getMessage()));
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
 
@@ -87,11 +74,14 @@ public class AdminController {
     @ApiOperation(value = "接口管理,显示已配置的接口，可以根据条件查询", notes = "某个Service微服务下的已Mock方法列表")
     @PostMapping(value = "/listInterfaces")
     public Object listMethodsByService(@RequestBody QueryMethodReq request) {
-        return dslMockService.queryMethodByCondition(request);
+        try {
+            QueryMethodResp resp = dslMockService.queryMethodByCondition(request);
+            return Resp.success(resp);
+        } catch (Exception e) {
+            log.error("addService Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
     }
-
-
-
 
 
     @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")
@@ -102,18 +92,14 @@ public class AdminController {
             @ApiImplicitParam(name = "mockData", value = "mock需要返回的数据", dataType = "String")
     })
     @PostMapping("/addMock")
-    public ResponseEntity addMockData(@RequestParam String service, @RequestParam String method, @RequestParam String version,
-                                      @RequestParam String mockExpress, @RequestParam String mockData) {
+    public Object addMockData(@RequestParam String service, @RequestParam String method, @RequestParam String version,
+                              @RequestParam String mockExpress, @RequestParam String mockData) {
         try {
-
             mockService.addMockInfo(service, method, version, mockExpress, mockData);
-            return ResponseEntity.ok(Resp.of(RespEnum.OK));
+            return Resp.success(RespUtil.OK);
         } catch (JSONException e) {
             log.error("Json Schema 解析失败，请检查格式: {}", e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Resp.of(RespEnum.ERROR.getCode(),
-                            "Json Schema 解析失败，请检查格式: " + e.getMessage()));
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
 
@@ -132,14 +118,12 @@ public class AdminController {
             @ApiImplicitParam(name = "belowId", value = "需要修改的规则的Id", dataType = "String")
     })
     @PostMapping("/modify/priority")
-    public ResponseEntity modifyMockPriority(@RequestParam long frontId, @RequestParam long belowId) {
+    public Object modifyMockPriority(@RequestParam long frontId, @RequestParam long belowId) {
         try {
             mockService.modifyMockPriority(frontId, belowId);
-            return ResponseEntity.ok(Resp.of(RespEnum.OK));
+            return Resp.success(RespUtil.OK);
         } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Resp.of(RespEnum.ERROR.getCode(), e.getMessage()));
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
 
@@ -149,11 +133,9 @@ public class AdminController {
     public Object updateService(@RequestBody MockServiceVo mockServiceVo) {
         try {
             mockService.updateService(mockServiceVo);
-            return ResponseEntity.ok(Resp.of(RespEnum.OK));
+            return Resp.success(RespUtil.OK);
         } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Resp.of(RespEnum.ERROR.getCode(), e.getMessage()));
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
 
@@ -162,11 +144,9 @@ public class AdminController {
     public Object updateMock(@RequestBody MockVo mockVo) {
         try {
             mockService.updateMock(mockVo);
-            return ResponseEntity.ok(Resp.of(RespEnum.OK));
+            return Resp.success(RespUtil.OK);
         } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Resp.of(RespEnum.ERROR.getCode(), e.getMessage()));
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
 
