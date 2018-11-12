@@ -11,6 +11,9 @@ public class QueryServiceReq {
 
     private String serviceName;
 
+
+    private String version;
+
     private Long serviceId;
 
     private DmsPageReq pageRequest;
@@ -25,6 +28,10 @@ public class QueryServiceReq {
 
     public Long getServiceId() {
         return serviceId;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
     public DmsPageReq getPageRequest() {

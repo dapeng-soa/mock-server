@@ -3,12 +3,8 @@ package com.github.dapeng.dms.web.services;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.web.entity.*;
 import com.github.dapeng.dms.web.entity.MockService;
-import com.github.dapeng.dms.web.repository.MetadataRepository;
-import com.github.dapeng.dms.web.repository.MockRepository;
-import com.github.dapeng.dms.web.repository.MockServiceRepository;
 import com.github.dapeng.dms.web.vo.MockMethodVo;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
-import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.web.vo.request.DmsPageReq;
 import com.github.dapeng.dms.web.vo.request.QueryMethodReq;
 import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
@@ -19,8 +15,8 @@ import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
@@ -37,19 +33,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DslMockService implements InitializingBean {
 
-    private final MockRepository mockRepository;
-    private final MockServiceRepository mockServiceRepository;
-    private final MetadataRepository metadataRepository;
     //实体管理者
     private final EntityManager entityManager;
     //JPA查询工厂
     private JPAQueryFactory queryFactory;
 
-    public DslMockService(MockRepository mockRepository, MockServiceRepository mockServiceRepository,
-                          MetadataRepository metadataRepository, EntityManager entityManager) {
-        this.mockRepository = mockRepository;
-        this.mockServiceRepository = mockServiceRepository;
-        this.metadataRepository = metadataRepository;
+    public DslMockService(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
 
@@ -63,22 +52,23 @@ public class DslMockService implements InitializingBean {
      * 查询全部数据并根据id倒序
      */
     public Resp queryServiceByCondition(QueryServiceReq request) {
-        //使用 querydsl 查询
+        DmsPageReq dmsPage = request.getPageRequest();
+        //使用 queryDsl 查询
         QMockService qService = QMockService.mockService;
         //查询并返回结果集
         JPAQuery<MockService> serviceQuery = queryFactory.selectFrom(qService);
 
-        if (request.getSimpleName() != null) {
+        if (StringUtils.isNotBlank(request.getSimpleName())) {
             serviceQuery.where(qService.serviceName.like("%" + request.getSimpleName() + "%"));
+        }
+        if (StringUtils.isNotBlank(request.getVersion())) {
+            serviceQuery.where(qService.version.eq(request.getVersion()));
         }
         if (request.getServiceId() != null) {
             serviceQuery.where(qService.id.eq(request.getServiceId()));
         }
 
-        if (request.getPageRequest() != null) {
-            DmsPageReq dmsPage = request.getPageRequest();
-            //分页排序
-//            PageRequest pageRequest = PageRequest.of(dmsPage.getStart(), dmsPage.getLimit());
+        if (dmsPage != null) {
             serviceQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
         QueryResults<MockService> results = serviceQuery.orderBy(qService.id.asc()).fetchResults();
@@ -86,18 +76,14 @@ public class DslMockService implements InitializingBean {
         // fetch data
         List<MockServiceVo> mockServiceVoList = results.getResults().stream().map(serviceInfo -> {
             long count = queryMockMethodCount(serviceInfo.getId());
-
             String serviceName = serviceInfo.getServiceName();
             String simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
-
             return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(),
                     simpleService, serviceInfo.getVersion(), null, count);
-
         }).collect(Collectors.toList());
 
-        if (request.getPageRequest() != null) {
-            DmsPageReq page = request.getPageRequest();
-            DmsPageResp dmsPageResp = new DmsPageResp(page.getStart(), page.getLimit(), results.getTotal());
+        if (dmsPage != null) {
+            DmsPageResp dmsPageResp = new DmsPageResp(dmsPage.getStart(), dmsPage.getLimit(), results.getTotal());
             return Resp.success(new ListServiceResp(mockServiceVoList, dmsPageResp));
         }
         return Resp.success(new ListServiceResp(mockServiceVoList));
@@ -109,6 +95,8 @@ public class DslMockService implements InitializingBean {
      * @param request
      */
     public QueryMethodResp queryMethodByCondition(QueryMethodReq request) {
+        DmsPageReq dmsPage = request.getPageRequest();
+
         QMockMethod qMethod = QMockMethod.mockMethod;
         JPAQuery<MockMethod> serviceQuery = queryFactory.selectFrom(qMethod);
 
@@ -119,27 +107,29 @@ public class DslMockService implements InitializingBean {
             serviceQuery.where(qMethod.method.eq(request.getMethodName()));
         }
 
-        if (request.getPageRequest() != null) {
-            DmsPageReq dmsPage = request.getPageRequest();
-            //分页排序
-            PageRequest pageRequest = PageRequest.of(dmsPage.getStart(), dmsPage.getLimit());
-            serviceQuery.offset(pageRequest.getOffset()).limit(pageRequest.getPageSize());
+        if (dmsPage != null) {
+            serviceQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
         QueryResults<MockMethod> results = serviceQuery.orderBy(qMethod.id.asc()).fetchResults();
-        log.info("MockMethod results: {}", results.toString());
+        log.info("MockMethod results size: {}", results.getResults().size());
 
         List<MockMethodVo> mockMethodVoList = results.getResults().stream()
                 .map(m -> new MockMethodVo(m.getId(), m.getService(), m.getMethod(), m.getRequestType(), m.getUrl()))
                 .collect(Collectors.toList());
 
-        if (request.getPageRequest() != null) {
-            DmsPageResp dmsPageResp = new DmsPageResp(results.getOffset(), results.getLimit(), results.getTotal());
+        if (dmsPage != null) {
+            DmsPageResp dmsPageResp = new DmsPageResp(dmsPage.getStart(), dmsPage.getLimit(), results.getTotal());
             return new QueryMethodResp(mockMethodVoList, dmsPageResp);
         }
         return new QueryMethodResp(mockMethodVoList);
     }
 
-    public long queryMockMethodCount(long serviceId) {
+    /**
+     * count
+     *
+     * @param serviceId serviceID
+     */
+    private long queryMockMethodCount(long serviceId) {
         QMock qMock = QMock.mock;
         return queryFactory
                 .selectFrom(qMock)
@@ -147,18 +137,17 @@ public class DslMockService implements InitializingBean {
                 .fetchCount();
     }
 
+    public Object queryMetadataById(String service) {
+        QMockMetadata qMetadata = QMockMetadata.mockMetadata;
+        List<MockMetadata> metadataList = queryFactory
+                .selectFrom(qMetadata)
+                .where(qMetadata.serviceName.eq(service))
+                .fetch();
 
-    /**
-     * transfer Mock POJO to MockVo
-     */
-    private List<MockVo> transferMockVo(List<Mock> mockList) {
-        return mockList.stream().map(mock -> {
-            String service = mock.getServiceName();
-            String simpleService = service.substring(service.lastIndexOf(".") + 1);
-            return new MockVo(mock.getId(), mock.getServiceName(), mock.getMethodName(), mock.getVersion(),
-                    mock.getHttpMethod(), mock.getMockExpress(), mock.getData(), mock.getServiceId(), mock.getSort());
-        }).collect(Collectors.toList());
+        return metadataList.get(0);
     }
+
+
 
 
     /*

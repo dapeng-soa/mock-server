@@ -1,26 +1,17 @@
 package com.github.dapeng.dms.web.controller;
 
-import com.github.dapeng.dms.web.entity.Mock;
-import com.github.dapeng.dms.web.entity.MockMetadata;
-import com.github.dapeng.dms.web.entity.MockService;
 import com.github.dapeng.dms.web.services.DslMockService;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
-import com.github.dapeng.dms.web.vo.request.DmsPageReq;
 import com.github.dapeng.dms.web.vo.request.QueryMethodReq;
 import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
-import com.github.dapeng.dms.web.vo.response.DmsPageResp;
-import com.github.dapeng.dms.web.vo.response.ListServiceResp;
 import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
-import com.querydsl.core.QueryResults;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,15 +38,26 @@ public class AdminController {
         this.dslMockService = dslMockService;
     }
 
-    @ApiOperation(value = "显示目前已有的Mock服务Service")
+    @ApiOperation(value = "根据条件 List Service")
     @PostMapping("/listServices")
     public Object listMockService(@RequestBody QueryServiceReq requestVo) {
         try {
             return dslMockService.queryServiceByCondition(requestVo);
         } catch (Exception e) {
-            return Resp.error("ERROR-ADMIN-500", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
+
+    @ApiOperation(value = "根据条件 List Service")
+    @PostMapping("/queryMetadata")
+    public Object queryMetadataById(String service) {
+        try {
+            return dslMockService.queryMetadataById(service);
+        } catch (Exception e) {
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
 
     @ApiOperation(value = "添加一个Mock服务", notes = "注意服务名包全名")
     @ApiResponse(code = 200, message = "返回添加成功后的MockServiceVo对象")
@@ -71,7 +73,7 @@ public class AdminController {
     }
 
 
-    @ApiOperation(value = "接口管理,显示已配置的接口，可以根据条件查询", notes = "某个Service微服务下的已Mock方法列表")
+    @ApiOperation(value = "根据条件 List Method")
     @PostMapping(value = "/listInterfaces")
     public Object listMethodsByService(@RequestBody QueryMethodReq request) {
         try {
@@ -148,18 +150,5 @@ public class AdminController {
         } catch (Exception e) {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
-    }
-
-
-    /**
-     * transfer Mock POJO to MockVo
-     */
-    private List<MockVo> transferMockVo(List<Mock> mockList) {
-        return mockList.stream().map(mock -> {
-            String service = mock.getServiceName();
-            String simpleService = service.substring(service.lastIndexOf(".") + 1);
-            return new MockVo(mock.getId(), mock.getServiceName(), mock.getMethodName(), mock.getVersion(),
-                    mock.getHttpMethod(), mock.getMockExpress(), mock.getData(), mock.getServiceId(), mock.getSort());
-        }).collect(Collectors.toList());
     }
 }
