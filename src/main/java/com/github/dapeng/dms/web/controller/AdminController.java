@@ -1,10 +1,12 @@
 package com.github.dapeng.dms.web.controller;
 
+import com.github.dapeng.dms.util.RestUtil;
 import com.github.dapeng.dms.web.services.DslMockService;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
+import com.github.dapeng.dms.web.vo.request.CreateMethodReq;
 import com.github.dapeng.dms.web.vo.request.QueryMethodReq;
 import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
 import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
@@ -13,9 +15,6 @@ import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * todo 后期使用 Aspect 切面简化代码 并优化。
@@ -85,7 +84,30 @@ public class AdminController {
         }
     }
 
+    @ApiOperation(value = "增加服务下的接口 Method")
+    @PostMapping(value = "/createInterface")
+    public Object createMethod(@RequestBody CreateMethodReq request) {
+        try {
+            dslMockService.createMethod(request);
+            return Resp.success();
+        } catch (Exception e) {
+            log.error("addService Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
 
+    @ApiOperation(value = "根据id删除接口")
+    @PostMapping(value = "/deleteInterface")
+    public Object deleteMethod(Long id) {
+        try {
+            RestUtil.notNull(id);
+            dslMockService.deleteMethod(id);
+            return Resp.success();
+        } catch (Exception e) {
+            log.error("addService Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
 
 
     @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")

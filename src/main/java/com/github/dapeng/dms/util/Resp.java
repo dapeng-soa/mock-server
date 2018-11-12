@@ -33,6 +33,10 @@ public class Resp<T> {
         return new Resp<>(success);
     }
 
+    public static <T> Resp success() {
+        return new Resp<>("");
+    }
+
     public static <T> Resp error(String responseCode, T responseMsg) {
         return new Resp<>(responseCode, responseMsg);
     }
