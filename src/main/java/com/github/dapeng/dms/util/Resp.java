@@ -34,7 +34,7 @@ public class Resp<T> {
     }
 
     public static <T> Resp success() {
-        return new Resp<>("");
+        return new Resp<>("{}");
     }
 
     public static <T> Resp error(String responseCode, T responseMsg) {
