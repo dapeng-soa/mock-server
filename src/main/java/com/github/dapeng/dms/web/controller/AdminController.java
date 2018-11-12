@@ -6,10 +6,7 @@ import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
-import com.github.dapeng.dms.web.vo.request.CreateMethodReq;
-import com.github.dapeng.dms.web.vo.request.QueryMethodReq;
-import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
-import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
+import com.github.dapeng.dms.web.vo.request.*;
 import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
@@ -91,7 +88,19 @@ public class AdminController {
             dslMockService.createMethod(request);
             return Resp.success();
         } catch (Exception e) {
-            log.error("addService Error: {}", e.getMessage());
+            log.error("createInterface Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "修改服务下的接口 Method")
+    @PostMapping(value = "/updateInterface")
+    public Object updateMethod(@RequestBody UpdateMethodReq request) {
+        try {
+            dslMockService.updateMethod(request);
+            return Resp.success();
+        } catch (Exception e) {
+            log.error("updateInterface Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
@@ -104,7 +113,7 @@ public class AdminController {
             dslMockService.deleteMethod(id);
             return Resp.success();
         } catch (Exception e) {
-            log.error("addService Error: {}", e.getMessage());
+            log.error("deleteInterface Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }

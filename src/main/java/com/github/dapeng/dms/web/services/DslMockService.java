@@ -3,12 +3,10 @@ package com.github.dapeng.dms.web.services;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.web.entity.*;
 import com.github.dapeng.dms.web.entity.MockService;
+import com.github.dapeng.dms.web.repository.MockMethodRepository;
 import com.github.dapeng.dms.web.vo.MockMethodVo;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
-import com.github.dapeng.dms.web.vo.request.CreateMethodReq;
-import com.github.dapeng.dms.web.vo.request.DmsPageReq;
-import com.github.dapeng.dms.web.vo.request.QueryMethodReq;
-import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
+import com.github.dapeng.dms.web.vo.request.*;
 import com.github.dapeng.dms.web.vo.response.DmsPageResp;
 import com.github.dapeng.dms.web.vo.response.ListServiceResp;
 import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
@@ -21,6 +19,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,14 +32,17 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@Transactional
 public class DslMockService implements InitializingBean {
 
+    private final MockMethodRepository methodRepository;
     //实体管理者
     private final EntityManager entityManager;
     //JPA查询工厂
     private JPAQueryFactory queryFactory;
 
-    public DslMockService(EntityManager entityManager) {
+    public DslMockService(MockMethodRepository methodRepository, EntityManager entityManager) {
+        this.methodRepository = methodRepository;
         this.entityManager = entityManager;
     }
 
@@ -149,7 +151,18 @@ public class DslMockService implements InitializingBean {
         return metadataList.get(0);
     }
 
-    public long createMethod(CreateMethodReq request) {
+    public void createMethod(CreateMethodReq request) {
+        methodRepository.save(
+                new MockMethod(request.getServiceName(),
+                        request.getMethodName(),
+                        request.getRequestType(),
+                        request.getUrl(),
+                        new Timestamp(System.currentTimeMillis())));
+
+
+    }
+
+    public long updateMethod(UpdateMethodReq request) {
         QMockMethod qMethod = QMockMethod.mockMethod;
         return queryFactory.update(qMethod)
                 .set(qMethod.service, request.getServiceName())
@@ -157,6 +170,7 @@ public class DslMockService implements InitializingBean {
                 .set(qMethod.requestType, request.getRequestType())
                 .set(qMethod.url, request.getUrl())
                 .set(qMethod.createdAt, new Timestamp(System.currentTimeMillis()))
+                .where(qMethod.id.eq(request.getId()))
                 .execute();
     }
 
