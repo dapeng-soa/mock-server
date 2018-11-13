@@ -10,4 +10,10 @@ public class RestUtil {
             throw new IllegalArgumentException("parameter could not be null");
         }
     }
+
+    public static <T> void notNull(T req, String msg) {
+        if (req == null) {
+            throw new IllegalArgumentException(msg);
+        }
+    }
 }

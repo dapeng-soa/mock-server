@@ -53,9 +53,9 @@ public class Mock {
     @Column(columnDefinition = "MEDIUMTEXT")
     private String data;
 
-    @ApiModelProperty("服务编号")
-    @Column(name = "service_id")
-    private Long serviceId;
+    @ApiModelProperty("接口（方法)编号")
+    @Column(name = "method_id")
+    private Long methodId;
 
     @ApiModelProperty("排序号")
     @Column
@@ -63,7 +63,7 @@ public class Mock {
 
 
     public Mock(String serviceName, String methodName, String version, String httpMethod,
-                String mockExpress, String mockCompileJson, String data, Long serviceId) {
+                String mockExpress, String mockCompileJson, String data, Long methodId) {
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.version = version;
@@ -72,12 +72,12 @@ public class Mock {
         this.mockExpress = mockExpress;
         this.mockCompileJson = mockCompileJson;
         this.data = data;
-        this.serviceId = serviceId;
+        this.methodId = methodId;
         this.sort = 1000L;
     }
 
     public Mock(String serviceName, String methodName, String version, String httpMethod,
-                String mockExpress, String mockCompileJson, String data, Long serviceId, long sort) {
+                String mockExpress, String mockCompileJson, String data, Long methodId, long sort) {
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.version = version;
@@ -86,7 +86,7 @@ public class Mock {
         this.mockExpress = mockExpress;
         this.mockCompileJson = mockCompileJson;
         this.data = data;
-        this.serviceId = serviceId;
+        this.methodId = methodId;
         this.sort = sort;
     }
 

@@ -7,6 +7,7 @@ import com.github.dapeng.dms.web.repository.MockMethodRepository;
 import com.github.dapeng.dms.web.util.MockException;
 import com.github.dapeng.dms.web.vo.MockMethodVo;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
+import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.web.vo.request.*;
 import com.github.dapeng.dms.web.vo.response.DmsPageResp;
 import com.github.dapeng.dms.web.vo.response.ListServiceResp;
@@ -82,6 +83,7 @@ public class DslMockService implements InitializingBean {
 
         // fetch data
         List<MockServiceVo> mockServiceVoList = results.getResults().stream().map(serviceInfo -> {
+
             long count = queryMockMethodCount(serviceInfo.getId());
             String serviceName = serviceInfo.getServiceName();
             String simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
@@ -98,8 +100,6 @@ public class DslMockService implements InitializingBean {
 
     /**
      * query methods
-     *
-     * @param request
      */
     public QueryMethodResp queryMethodByCondition(QueryMethodReq request) {
         DmsPageReq dmsPage = request.getPageRequest();
@@ -133,14 +133,12 @@ public class DslMockService implements InitializingBean {
 
     /**
      * count
-     *
-     * @param serviceId serviceID
      */
     private long queryMockMethodCount(long serviceId) {
-        QMock qMock = QMock.mock;
+        QMockMethod qMethod = QMockMethod.mockMethod;
         return queryDsl
-                .selectFrom(qMock)
-                .where(qMock.serviceId.eq(serviceId))
+                .selectFrom(qMethod)
+                .where(qMethod.serviceId.eq(serviceId))
                 .fetchCount();
     }
 
@@ -189,50 +187,31 @@ public class DslMockService implements InitializingBean {
 
     /**
      * 根据服务名 和 方法名 查询 Mock Express 数据
-     *
-     * @param service serviceName
-     * @param method  methodName
      */
-    /*public QueryMockResp listMockExpress(String service, String method) {
+    public QueryMockResp listMockExpress(QueryMockReq request) {
         DmsPageReq dmsPage = request.getPageRequest();
-
-        QMockMethod qMethod = QMockMethod.mockMethod;
-        JPAQuery<MockMethod> serviceQuery = queryDsl.selectFrom(qMethod);
-
-        if (request.getServiceName() != null) {
-            serviceQuery.where(qMethod.service.like("%" + request.getServiceName() + "%"));
-        }
-        if (request.getMethodName() != null) {
-            serviceQuery.where(qMethod.method.eq(request.getMethodName()));
-        }
+        QMock qMock = QMock.mock;
+        JPAQuery<Mock> serviceQuery = queryDsl.selectFrom(qMock);
+        serviceQuery.where(qMock.methodId.eq(request.getMethodId()));
 
         if (dmsPage != null) {
             serviceQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
-        QueryResults<MockMethod> results = serviceQuery.orderBy(qMethod.id.asc()).fetchResults();
-        log.info("MockMethod results size: {}", results.getResults().size());
+        QueryResults<Mock> results = serviceQuery.orderBy(qMock.id.asc()).fetchResults();
 
-        List<MockMethodVo> mockMethodVoList = results.getResults().stream()
-                .map(m -> new MockMethodVo(m.getId(), m.getService(), m.getMethod(), m.getRequestType(), m.getUrl()))
+        log.info("listMockExpress results size: {}", results.getResults().size());
+
+        List<MockVo> mockList = results.getResults().stream()
+                .map(m -> new MockVo(m.getId(), m.getMockExpress(), m.getData(), m.getSort()))
                 .collect(Collectors.toList());
 
         if (dmsPage != null) {
             DmsPageResp dmsPageResp = new DmsPageResp(dmsPage.getStart(), dmsPage.getLimit(), results.getTotal());
-            return new QueryMethodResp(mockMethodVoList, dmsPageResp);
+            return new QueryMockResp(mockList, dmsPageResp);
         }
-        return new QueryMethodResp(mockMethodVoList);
 
-
-
-
-        QMock qMock = QMock.mock;
-        List<Mock> fetch = queryDsl.selectFrom(qMock)
-                .where(qMock.serviceName.eq(service).and(qMock.methodName.eq(method)))
-                .fetch();
-
-
-        return null;
-    }*/
+        return new QueryMockResp(mockList);
+    }
 
 
 

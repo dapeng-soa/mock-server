@@ -32,7 +32,7 @@ public class DapengMockServerApplication {
      *
      * @return
      */
-    @Bean
+   /* @Bean
     public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
         MappingJackson2HttpMessageConverter mappingConverter = new MappingJackson2HttpMessageConverter();
         List<MediaType> list = new ArrayList();
@@ -41,5 +41,5 @@ public class DapengMockServerApplication {
         list.add(MediaType.APPLICATION_JSON_UTF8);
         mappingConverter.setSupportedMediaTypes(list);
         return mappingConverter;
-    }
+    }*/
 }

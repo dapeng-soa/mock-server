@@ -9,21 +9,16 @@ package com.github.dapeng.dms.web.vo.request;
  */
 public class QueryMockReq {
 
-    private String serviceName;
-
-    private String methodName;
+    private Long methodId;
 
     private DmsPageReq pageRequest;
 
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    public String getMethodName() {
-        return methodName;
+    public Long getMethodId() {
+        return methodId;
     }
 
     public DmsPageReq getPageRequest() {
         return pageRequest;
     }
+
 }

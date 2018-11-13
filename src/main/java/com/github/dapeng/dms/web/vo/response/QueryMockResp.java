@@ -3,6 +3,7 @@ package com.github.dapeng.dms.web.vo.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.dapeng.dms.web.vo.MockMethodVo;
+import com.github.dapeng.dms.web.vo.MockVo;
 import lombok.Data;
 
 import java.util.List;
@@ -17,16 +18,16 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class QueryMockResp {
 
-    private List<MockMethodVo> methodList;
+    private List<MockVo> mockList;
 
     private DmsPageResp pageResponse;
 
-    public QueryMockResp(List<MockMethodVo> methodVoList, DmsPageResp pageResponse) {
-        this.methodList = methodVoList;
+    public QueryMockResp(List<MockVo> mockList, DmsPageResp pageResponse) {
+        this.mockList = mockList;
         this.pageResponse = pageResponse;
     }
 
-    public QueryMockResp(List<MockMethodVo> methodVoList) {
-        this.methodList = methodVoList;
+    public QueryMockResp(List<MockVo> mockList) {
+        this.mockList = mockList;
     }
 }

@@ -9,15 +9,11 @@ import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.dms.web.vo.request.*;
 import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
 import com.github.dapeng.dms.web.vo.response.QueryMockResp;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.web.bind.annotation.*;
-import sun.rmi.runtime.Log;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -126,17 +122,18 @@ public class AdminController {
         }
     }
 
-    /*@ApiOperation(value = "根据条件 List Method")
-    @PostMapping(value = "/listInterfaces")
-    public Object listMockExpress(@RequestBody String service, @RequestParam String method) {
+    @ApiOperation(value = "根据条件 List Mock Express")
+    @PostMapping(value = "/listMockExpress")
+    public Object listMockExpress(@RequestBody QueryMockReq request) {
         try {
-            QueryMockResp resp = dslMockService.listMockExpress(service,method);
+            RestUtil.notNull(request.getMethodId(), "请求MockExpress规则时,methodId 不能为空");
+            QueryMockResp resp = dslMockService.listMockExpress(request);
             return Resp.success(resp);
         } catch (Exception e) {
-            log.error("addService Error: {}", e.getMessage());
+            log.error("listMockExpress Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
-    }*/
+    }
 
 
     @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")
