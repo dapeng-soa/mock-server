@@ -9,11 +9,17 @@ package com.github.dapeng.dms.web.vo.request;
  */
 public class QueryMethodReq {
 
+    private Long serviceId;
+
     private String serviceName;
 
     private String methodName;
 
     private DmsPageReq pageRequest;
+
+    public Long getServiceId() {
+        return serviceId;
+    }
 
     public String getServiceName() {
         return serviceName;

@@ -44,7 +44,7 @@ public class MockUtils {
 
         for (Map.Entry<String, Object> entry : stringObjectMap.entrySet()) {
             String k = entry.getKey();
-            String expectedValue = (String) entry.getValue();
+            String expectedValue = entry.getValue().toString();
             PatternWrapper wrapper = pattern(new RuleLexer(expectedValue));
             expressWrapperMap.put(k, wrapper);
         }

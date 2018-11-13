@@ -115,13 +115,16 @@ public class DslMockService implements InitializingBean {
         QMockMethod qMethod = QMockMethod.mockMethod;
         JPAQuery<MockMethod> serviceQuery = queryDsl.selectFrom(qMethod);
 
-        if (request.getServiceName() != null) {
-            serviceQuery.where(qMethod.service.like("%" + request.getServiceName() + "%"));
+        if (request.getServiceId() != null) {
+            serviceQuery.where(qMethod.serviceId.eq(request.getServiceId()));
+        } else {
+            if (request.getServiceName() != null) {
+                serviceQuery.where(qMethod.service.like("%" + request.getServiceName() + "%"));
+            }
+            if (request.getMethodName() != null) {
+                serviceQuery.where(qMethod.method.eq(request.getMethodName()));
+            }
         }
-        if (request.getMethodName() != null) {
-            serviceQuery.where(qMethod.method.eq(request.getMethodName()));
-        }
-
         if (dmsPage != null) {
             serviceQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
@@ -284,6 +287,16 @@ public class DslMockService implements InitializingBean {
         }
         mockUpdate.where(qMock.id.eq(request.getMockId())).execute();
     }
+
+
+    public void deleteMockInfo(Long id) {
+        QMock qMock = QMock.mock;
+        long executeId = queryDsl.delete(qMock).where(qMock.id.eq(id)).execute();
+        if (executeId != 1) {
+            throw new MockException("根据Id删除Mock规则异常,可能数据并不存在");
+        }
+    }
+
 
 
 

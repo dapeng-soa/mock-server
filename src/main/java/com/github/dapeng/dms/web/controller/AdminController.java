@@ -150,7 +150,6 @@ public class AdminController {
         }
     }
 
-
     @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")
     @PostMapping("/createMockInfo")
     public Object createMockInfo(@RequestBody CreateMockReq request) {
@@ -177,6 +176,19 @@ public class AdminController {
         }
     }
 
+    @ApiOperation(value = "根据ID删除某一个mock规则")
+    @PostMapping("/deleteMockInfo")
+    public Object deleteMockInfo(@RequestBody Map<String, String> requestMap) {
+        try {
+            String id = requestMap.get("id");
+            RestUtil.notNull(id, "删除Mock规则时,传入id不能为空");
+            dslMockService.deleteMockInfo(Long.valueOf(id));
+            return Resp.success();
+        } catch (Exception e) {
+            log.error("updateMockInfo Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
 
     /**
      * 优先级修改。默认规则是 从下往上进行移动。
