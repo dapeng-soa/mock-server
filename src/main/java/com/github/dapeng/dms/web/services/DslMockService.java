@@ -1,10 +1,14 @@
 package com.github.dapeng.dms.web.services;
 
+import com.github.dapeng.dms.mock.matchers.validator.JsonSchemaValidator;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.web.entity.*;
 import com.github.dapeng.dms.web.entity.MockService;
+import com.github.dapeng.dms.web.entity.dto.MockDto;
 import com.github.dapeng.dms.web.repository.MockMethodRepository;
+import com.github.dapeng.dms.web.repository.MockRepository;
 import com.github.dapeng.dms.web.util.MockException;
+import com.github.dapeng.dms.web.util.MockUtils;
 import com.github.dapeng.dms.web.vo.MockMethodVo;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
@@ -14,11 +18,14 @@ import com.github.dapeng.dms.web.vo.response.ListServiceResp;
 import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
 import com.github.dapeng.dms.web.vo.response.QueryMockResp;
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.json.JSONException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
@@ -26,6 +33,8 @@ import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
 
 /**
  * shuold start transaction if use update/delete/create
@@ -40,13 +49,15 @@ import java.util.stream.Collectors;
 public class DslMockService implements InitializingBean {
 
     private final MockMethodRepository methodRepository;
+    private final MockRepository mockRepository;
     //实体管理者
     private final EntityManager entityManager;
     //JPA查询工厂
     private JPAQueryFactory queryDsl;
 
-    public DslMockService(MockMethodRepository methodRepository, EntityManager entityManager) {
+    public DslMockService(MockMethodRepository methodRepository, MockRepository mockRepository, EntityManager entityManager) {
         this.methodRepository = methodRepository;
+        this.mockRepository = mockRepository;
         this.entityManager = entityManager;
     }
 
@@ -213,6 +224,43 @@ public class DslMockService implements InitializingBean {
         return new QueryMockResp(mockList);
     }
 
+    /**
+     * 创建 mock 规则
+     */
+    public void createMockInfo(CreateMockReq request) throws JSONException {
+        JsonSchemaValidator.matcher(request.getMockExpress());
+        JsonSchemaValidator.matcher(request.getMockData());
+        //convert
+        String mockCompileJson = MockUtils.convertJsonValueToPatternJson(request.getMockExpress());
+
+        QMockService qService = QMockService.mockService;
+        QMockMethod qMethod = QMockMethod.mockMethod;
+
+        List<MockDto> mockDtoList = queryDsl.select(Projections.bean(MockDto.class, qService.serviceName, qMethod.method,
+                qService.version, qMethod.requestType, qService.id.as("serviceId"))).from(qService)
+                .leftJoin(qMethod)
+                .on(qService.id.eq(qMethod.serviceId))
+                .where(qMethod.id.eq(request.getMethodId())).fetch();
+        if (mockDtoList.size() == 1) {
+            MockDto dto = mockDtoList.get(0);
+            String mockKey = MockUtils.combineMockKey(dto.getService(), dto.getMethod(), dto.getVersion());
+            QMock qMock = QMock.mock;
+            Mock latestMock = queryDsl.selectFrom(qMock).where(qMock.mockKey.eq(mockKey)).orderBy(qMock.sort.desc()).fetchFirst();
+
+            if (latestMock != null) {
+                Mock newMock = new Mock(dto.getService(), dto.getMethod(), dto.getVersion(), dto.getRequestType(),
+                        request.getMockExpress(), mockCompileJson, request.getMockData(), dto.getServiceId(),
+                        latestMock.getSort() + DEFAULT_SORT_NUM);
+                mockRepository.save(newMock);
+            } else {
+                Mock newMock = new Mock(dto.getService(), dto.getMethod(), dto.getVersion(), dto.getRequestType(),
+                        request.getMockExpress(), mockCompileJson, request.getMockData(), dto.getServiceId(), DEFAULT_SORT_NUM);
+                mockRepository.save(newMock);
+            }
+        } else {
+            throw new MockException("不存在或大于1");
+        }
+    }
 
 
 

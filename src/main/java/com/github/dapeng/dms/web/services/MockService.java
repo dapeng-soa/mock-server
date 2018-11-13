@@ -131,9 +131,7 @@ public class MockService {
     }
 
 
-    public List<Mock> findMockByServiceId(long serviceId) {
-        return mockRepository.findMockByServiceId(serviceId);
-    }
+
 
     /**
      * 根据 mock-key 查询已经添加的mock规则，会根据用户排过序的规则显示。

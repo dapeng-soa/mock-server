@@ -14,8 +14,6 @@ public interface MockRepository extends BaseRepository<Mock> {
 
     List<Mock> findMockByMockKey(String name);
 
-    List<Mock> findMockByServiceId(long serviceId);
-
 
     @Query(nativeQuery = true, value = "select * from mock_data where mock_key =?1  order by sort  desc limit 1")
     Mock findMockByMockKeyOrderBySortDesc(String mockKey);

@@ -137,17 +137,11 @@ public class AdminController {
 
 
     @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")
-    @ApiImplicitParams({@ApiImplicitParam(name = "service", value = "服务名称", dataType = "String"),
-            @ApiImplicitParam(name = "method", value = "方法名称", dataType = "String"),
-            @ApiImplicitParam(name = "version", value = "版本号", dataType = "String"),
-            @ApiImplicitParam(name = "mockExpress", value = "mock匹配表达式", dataType = "String"),
-            @ApiImplicitParam(name = "mockData", value = "mock需要返回的数据", dataType = "String")
-    })
-    @PostMapping("/addMock")
-    public Object addMockData(@RequestParam String service, @RequestParam String method, @RequestParam String version,
-                              @RequestParam String mockExpress, @RequestParam String mockData) {
+    @PostMapping("/createMockInfo")
+    public Object createMockInfo(CreateMockReq request) {
         try {
-            mockService.addMockInfo(service, method, version, mockExpress, mockData);
+            dslMockService.createMockInfo(request);
+//            mockService.addMockInfo(service, method, version, mockExpress, mockData);
             return Resp.success(RespUtil.OK);
         } catch (JSONException e) {
             log.error("Json Schema 解析失败，请检查格式: {}", e.getMessage());
