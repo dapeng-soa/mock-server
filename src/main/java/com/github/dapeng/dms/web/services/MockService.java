@@ -112,11 +112,13 @@ public class MockService {
 
         if (latestMock != null) {
             Mock newMock = new Mock(service, method, version,
-                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData, serviceInfo.getId(), latestMock.getSort() + DEFAULT_SORT_NUM);
+                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData,
+                    serviceInfo.getId(), latestMock.getSort() + DEFAULT_SORT_NUM, new Timestamp(System.currentTimeMillis()));
             mockRepository.save(newMock);
         } else {
             Mock newMock = new Mock(service, method, version,
-                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData, serviceInfo.getId(), DEFAULT_SORT_NUM);
+                    HttpMethod.POST.name(), mockExpress, mockCompileJson,
+                    mockData, serviceInfo.getId(), DEFAULT_SORT_NUM, new Timestamp(System.currentTimeMillis()));
             mockRepository.save(newMock);
         }
     }
@@ -129,8 +131,6 @@ public class MockService {
     public List<MockServiceDto> findMockServiceListByCondition(QueryServiceReq request) {
         return MockServerDao.listServicesByCondition(request);
     }
-
-
 
 
     /**

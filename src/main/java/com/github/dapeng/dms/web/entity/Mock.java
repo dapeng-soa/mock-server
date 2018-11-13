@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 
 /**
@@ -38,8 +39,8 @@ public class Mock {
     private String version;
 
     @ApiModelProperty("Http请求方法(GET/POST/PUT/DELETE)")
-    @Column(name = "http_method")
-    private String httpMethod;
+    @Column(name = "request_type")
+    private String requestType;
 
     @ApiModelProperty("Mock预期表达式")
     @Column(name = "mock_express", columnDefinition = "varchar(1024)")
@@ -61,33 +62,25 @@ public class Mock {
     @Column
     private Long sort;
 
+    @Column(name = "created_at")
+    private Timestamp createdAt;
 
-    public Mock(String serviceName, String methodName, String version, String httpMethod,
-                String mockExpress, String mockCompileJson, String data, Long methodId) {
+    @Column(name = "updated_at")
+    private Timestamp updatedAt;
+
+    public Mock(String serviceName, String methodName, String version, String requestType,
+                String mockExpress, String mockCompileJson, String data, Long methodId, long sort, Timestamp createdAt) {
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.version = version;
         this.mockKey = serviceName + Constants.KEY_SEPARATE + methodName + Constants.KEY_SEPARATE + version;
-        this.httpMethod = httpMethod;
-        this.mockExpress = mockExpress;
-        this.mockCompileJson = mockCompileJson;
-        this.data = data;
-        this.methodId = methodId;
-        this.sort = 1000L;
-    }
-
-    public Mock(String serviceName, String methodName, String version, String httpMethod,
-                String mockExpress, String mockCompileJson, String data, Long methodId, long sort) {
-        this.serviceName = serviceName;
-        this.methodName = methodName;
-        this.version = version;
-        this.mockKey = serviceName + Constants.KEY_SEPARATE + methodName + Constants.KEY_SEPARATE + version;
-        this.httpMethod = httpMethod;
+        this.requestType = requestType;
         this.mockExpress = mockExpress;
         this.mockCompileJson = mockCompileJson;
         this.data = data;
         this.methodId = methodId;
         this.sort = sort;
+        this.createdAt = createdAt;
     }
 
 

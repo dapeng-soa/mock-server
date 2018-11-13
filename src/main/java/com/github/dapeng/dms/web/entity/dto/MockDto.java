@@ -13,6 +13,6 @@ public class MockDto {
     private String version;
     private String requestType;
 
-    private Long serviceId;
+    private Long methodId;
 
 }

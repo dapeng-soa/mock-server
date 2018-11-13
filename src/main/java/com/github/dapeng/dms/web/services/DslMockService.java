@@ -13,19 +13,16 @@ import com.github.dapeng.dms.web.vo.MockMethodVo;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.web.vo.request.*;
-import com.github.dapeng.dms.web.vo.response.DmsPageResp;
-import com.github.dapeng.dms.web.vo.response.ListServiceResp;
-import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
-import com.github.dapeng.dms.web.vo.response.QueryMockResp;
+import com.github.dapeng.dms.web.vo.response.*;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.querydsl.jpa.impl.JPAUpdateClause;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
@@ -225,6 +222,17 @@ public class DslMockService implements InitializingBean {
     }
 
     /**
+     * 根据methodId查询 service and method name
+     */
+    public MockMethodFormResp getMockMethodForm(Long id) {
+        QMockMethod qMethod = QMockMethod.mockMethod;
+        return queryDsl.select(Projections.bean(MockMethodFormResp.class, qMethod.service, qMethod.method))
+                .from(qMethod)
+                .where(qMethod.id.eq(id)).fetchFirst();
+
+    }
+
+    /**
      * 创建 mock 规则
      */
     public void createMockInfo(CreateMockReq request) throws JSONException {
@@ -236,8 +244,8 @@ public class DslMockService implements InitializingBean {
         QMockService qService = QMockService.mockService;
         QMockMethod qMethod = QMockMethod.mockMethod;
 
-        List<MockDto> mockDtoList = queryDsl.select(Projections.bean(MockDto.class, qService.serviceName, qMethod.method,
-                qService.version, qMethod.requestType, qService.id.as("serviceId"))).from(qService)
+        List<MockDto> mockDtoList = queryDsl.select(Projections.bean(MockDto.class, qService.serviceName.as("service"), qMethod.method,
+                qService.version, qMethod.requestType, qMethod.id.as("methodId"))).from(qService)
                 .leftJoin(qMethod)
                 .on(qService.id.eq(qMethod.serviceId))
                 .where(qMethod.id.eq(request.getMethodId())).fetch();
@@ -249,18 +257,34 @@ public class DslMockService implements InitializingBean {
 
             if (latestMock != null) {
                 Mock newMock = new Mock(dto.getService(), dto.getMethod(), dto.getVersion(), dto.getRequestType(),
-                        request.getMockExpress(), mockCompileJson, request.getMockData(), dto.getServiceId(),
-                        latestMock.getSort() + DEFAULT_SORT_NUM);
+                        request.getMockExpress(), mockCompileJson, request.getMockData(), dto.getMethodId(),
+                        latestMock.getSort() + DEFAULT_SORT_NUM, new Timestamp(System.currentTimeMillis()));
                 mockRepository.save(newMock);
             } else {
-                Mock newMock = new Mock(dto.getService(), dto.getMethod(), dto.getVersion(), dto.getRequestType(),
-                        request.getMockExpress(), mockCompileJson, request.getMockData(), dto.getServiceId(), DEFAULT_SORT_NUM);
+                Mock newMock = new Mock(dto.getService(), dto.getMethod(), dto.getVersion(), dto.getRequestType(), request.getMockExpress(),
+                        mockCompileJson, request.getMockData(), dto.getMethodId(), DEFAULT_SORT_NUM, new Timestamp(System.currentTimeMillis()));
                 mockRepository.save(newMock);
             }
         } else {
             throw new MockException("不存在或大于1");
         }
     }
+
+    /**
+     * update mock info
+     */
+    public void updateMockInfo(UpdateMockReq request) {
+        QMock qMock = QMock.mock;
+        JPAUpdateClause mockUpdate = queryDsl.update(qMock);
+        if (request.getMockExpress() != null) {
+            mockUpdate.set(qMock.mockExpress, request.getMockExpress());
+        }
+        if (request.getMockData() != null) {
+            mockUpdate.set(qMock.data, request.getMockExpress());
+        }
+        mockUpdate.where(qMock.id.eq(request.getMockId())).execute();
+    }
+
 
 
 

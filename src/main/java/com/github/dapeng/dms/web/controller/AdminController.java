@@ -7,6 +7,7 @@ import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.dms.web.vo.request.*;
+import com.github.dapeng.dms.web.vo.response.MockMethodFormResp;
 import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
 import com.github.dapeng.dms.web.vo.response.QueryMockResp;
 import io.swagger.annotations.*;
@@ -135,16 +136,43 @@ public class AdminController {
         }
     }
 
+    @ApiOperation(value = "根据methodId查询 service and method name")
+    @PostMapping(value = "/getMockMethodForm")
+    public Object getMockMethodForm(@RequestBody Map<String, String> requestMap) {
+        try {
+            String id = requestMap.get("id");
+            RestUtil.notNull(id, "根据methodId查询getMockMethodForm时，id不能为空.");
+            MockMethodFormResp resp = dslMockService.getMockMethodForm(Long.valueOf(id));
+            return Resp.success(resp);
+        } catch (Exception e) {
+            log.error("listMockExpress Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
 
     @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")
     @PostMapping("/createMockInfo")
-    public Object createMockInfo(CreateMockReq request) {
+    public Object createMockInfo(@RequestBody CreateMockReq request) {
         try {
             dslMockService.createMockInfo(request);
 //            mockService.addMockInfo(service, method, version, mockExpress, mockData);
             return Resp.success(RespUtil.OK);
         } catch (JSONException e) {
-            log.error("Json Schema 解析失败，请检查格式: {}", e.getMessage());
+            log.error("createMockInfo: Json Schema 解析失败，请检查格式: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "根据ID修改某一个方法的mock规则")
+    @PostMapping("/updateMockInfo")
+    public Object updateMockInfo(@RequestBody UpdateMockReq request) {
+        try {
+            dslMockService.updateMockInfo(request);
+//            mockService.addMockInfo(service, method, version, mockExpress, mockData);
+            return Resp.success(RespUtil.OK);
+        } catch (Exception e) {
+            log.error("updateMockInfo Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
