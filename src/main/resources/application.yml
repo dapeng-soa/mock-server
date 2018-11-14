@@ -40,6 +40,12 @@ spring:
 server:
   port: 9000
 
+dms:
+  thrift:
+    baseDir: /Users/maple/ideaspace/dapeng/dapeng-mock-server/file/thrift/
+  resource:
+    baseDir: /Users/maple/ideaspace/dapeng/dapeng-mock-server/file/resources/
+
 soa:
   zookeeper:
     host: 127.0.0.1:2181

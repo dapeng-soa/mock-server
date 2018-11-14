@@ -1,6 +1,8 @@
 package com.github.dapeng.dms.web.services;
 
 import com.github.dapeng.dms.mock.matchers.validator.JsonSchemaValidator;
+import com.github.dapeng.dms.mock.metadata.MetaMemoryCache;
+import com.github.dapeng.dms.util.CommonUtil;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.web.entity.*;
 import com.github.dapeng.dms.web.entity.MockService;
@@ -10,11 +12,13 @@ import com.github.dapeng.dms.web.repository.MockRepository;
 import com.github.dapeng.dms.web.repository.MockServiceRepository;
 import com.github.dapeng.dms.web.util.MockException;
 import com.github.dapeng.dms.web.util.MockUtils;
+import com.github.dapeng.dms.web.vo.MetadataVo;
 import com.github.dapeng.dms.web.vo.MockMethodVo;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.web.vo.request.*;
 import com.github.dapeng.dms.web.vo.response.*;
+import com.github.dapeng.json.OptimizedMetadata;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -180,29 +184,26 @@ public class DslMockService implements InitializingBean {
                         request.getRequestType(),
                         request.getUrl(),
                         new Timestamp(System.currentTimeMillis())));
-
-
     }
 
-    public long updateMethod(UpdateMethodReq request) {
+    public void updateMethod(UpdateMethodReq request) {
         QMockMethod qMethod = QMockMethod.mockMethod;
-        return queryDsl.update(qMethod)
+        queryDsl.update(qMethod)
                 .set(qMethod.service, request.getServiceName())
                 .set(qMethod.method, request.getMethodName())
                 .set(qMethod.requestType, request.getRequestType())
                 .set(qMethod.url, request.getUrl())
-                .set(qMethod.createdAt, new Timestamp(System.currentTimeMillis()))
                 .where(qMethod.id.eq(request.getId()))
                 .execute();
     }
 
-    public long deleteMethod(Long id) {
+    public void deleteMethod(Long id) {
         QMockMethod qMethod = QMockMethod.mockMethod;
         long count = queryDsl.selectFrom(qMethod).where(qMethod.id.eq(id)).fetchCount();
         if (count == 0) {
             throw new MockException("该Mock规则记录不存在");
         }
-        return queryDsl.delete(qMethod).where(qMethod.id.eq(id)).execute();
+        queryDsl.delete(qMethod).where(qMethod.id.eq(id)).execute();
     }
 
 
@@ -315,7 +316,7 @@ public class DslMockService implements InitializingBean {
             mockUpdate.set(qMock.mockExpress, request.getMockExpress());
         }
         if (request.getMockData() != null) {
-            mockUpdate.set(qMock.data, request.getMockExpress());
+            mockUpdate.set(qMock.data, request.getMockData());
         }
         mockUpdate.where(qMock.id.eq(request.getMockId())).execute();
     }
@@ -337,7 +338,45 @@ public class DslMockService implements InitializingBean {
     }
 
     public Object queryMetadataByCondition(QueryMetaReq request) {
-        return "";
+        DmsPageReq dmsPage = request.getPageRequest();
+        QMockMetadata qMeta = QMockMetadata.mockMetadata;
+        JPAQuery<MockMetadata> metaQuery = queryDsl.selectFrom(qMeta);
+
+        if (request.getMetadataId() != null) {
+            metaQuery.where(qMeta.id.eq(request.getMetadataId()));
+        } else {
+            if (request.getServiceName() != null) {
+                metaQuery.where(qMeta.serviceName.like("%" + request.getServiceName() + "%"));
+            }
+            if (request.getVersion() != null) {
+                metaQuery.where(qMeta.version.eq(request.getVersion()));
+            }
+        }
+        if (dmsPage != null) {
+            metaQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
+        }
+        QueryResults<MockMetadata> results = metaQuery.orderBy(qMeta.id.asc()).fetchResults();
+        log.info("Metadata service results size: {}", results.getResults().size());
+
+        //获取 metadata 的返回 List 信息
+        List<MetadataVo> metadataVoList = results.getResults().stream()
+                .map(m -> {
+                    String serviceNmae = m.getServiceName();
+                    String version = m.getVersion();
+                    String metaKey = CommonUtil.combine(serviceNmae, version);
+                    OptimizedMetadata.OptimizedService optimizedService = MetaMemoryCache.getFullServiceMap().get(metaKey);
+                    int methodSize = 0;
+                    if (optimizedService != null) {
+                        methodSize = optimizedService.getService().methods.size();
+                    }
+                    return new MetadataVo(m.getId(), m.getSimpleName(), serviceNmae, version, methodSize, m.getCreatedAt());
+                }).collect(Collectors.toList());
+
+        if (dmsPage != null) {
+            DmsPageResp dmsPageResp = new DmsPageResp(dmsPage.getStart(), dmsPage.getLimit(), results.getTotal());
+            return new QueryMetaResp(metadataVoList, dmsPageResp);
+        }
+        return new QueryMetaResp(metadataVoList);
     }
 
     public void updateMockPriority(UpdatePriorityReq request) {
@@ -347,6 +386,16 @@ public class DslMockService implements InitializingBean {
         for (Long value : priorityList) {
             queryDsl.update(qMock).set(qMock.sort, begin++).where(qMock.id.eq(value)).execute();
         }
+    }
+
+    public void updateService(UpdateServiceReq request) {
+        QMockService qService = QMockService.mockService;
+        queryDsl.update(qService)
+                .set(qService.simpleName, request.getSimpleName())
+                .set(qService.serviceName, request.getServiceName())
+                .set(qService.version, request.getVersion())
+                .where(qService.id.eq(request.getId()))
+                .execute();
     }
 
 

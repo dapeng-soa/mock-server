@@ -1,8 +1,7 @@
 package com.github.dapeng.dms.web.controller;
 
-import com.github.dapeng.dms.util.RestUtil;
+import com.github.dapeng.dms.util.CommonUtil;
 import com.github.dapeng.dms.web.services.DslMockService;
-import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
@@ -48,47 +47,6 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "根据条件 List Service")
-    @PostMapping("/queryMetadata")
-    public Object queryMetadataById(String service) {
-        try {
-            return dslMockService.queryMetadataById(service);
-        } catch (Exception e) {
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
-
-    @ApiOperation(value = "添加一个Mock基础服务")
-    @ApiResponse(code = 200, message = "返回添加成功后的MockServiceVo对象")
-    @PostMapping("/createService")
-    public Object createService(@RequestBody CreateServiceReq request) {
-        try {
-            RestUtil.notNull(request.getService(), "服务全称不能为空");
-            RestUtil.notNull(request.getVersion(), "版本信息不能为空");
-            dslMockService.createService(request);
-            return Resp.success();
-        } catch (Exception e) {
-            log.error("createService Error: {}", e.getMessage());
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
-    @ApiOperation(value = "根据id删除服务")
-    @PostMapping(value = "/deleteService")
-    public Object deleteService(@RequestBody Map<String, String> params) {
-        try {
-            String id = params.get("id");
-            RestUtil.notNull(id, "根据ID删除服务时，ID不能为空。");
-            dslMockService.deleteService(Long.valueOf(id));
-            return Resp.success();
-        } catch (Exception e) {
-            log.error("deleteService Error: {}", e.getMessage());
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
-
     @ApiOperation(value = "根据条件 List Method")
     @PostMapping(value = "/listInterfaces")
     public Object listMethodsByService(@RequestBody QueryMethodReq request) {
@@ -97,6 +55,47 @@ public class AdminController {
             return Resp.success(resp);
         } catch (Exception e) {
             log.error("addService Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "根据条件 List Mock Express")
+    @PostMapping(value = "/listMockExpress")
+    public Object listMockExpress(@RequestBody QueryMockReq request) {
+        try {
+            CommonUtil.notNull(request.getMethodId(), "请求MockExpress规则时,methodId 不能为空");
+            QueryMockResp resp = dslMockService.listMockExpress(request);
+            return Resp.success(resp);
+        } catch (Exception e) {
+            log.error("listMockExpress Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "元数据信息查询")
+    @PostMapping("/listMetadata")
+    public Object queryMetadataByCondition(@RequestBody QueryMetaReq request) {
+        try {
+            return dslMockService.queryMetadataByCondition(request);
+        } catch (Exception e) {
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    /**
+     * create
+     */
+    @ApiOperation(value = "添加一个Mock基础服务")
+    @ApiResponse(code = 200, message = "返回添加成功后的MockServiceVo对象")
+    @PostMapping("/createService")
+    public Object createService(@RequestBody CreateServiceReq request) {
+        try {
+            CommonUtil.notNull(request.getService(), "服务全称不能为空");
+            CommonUtil.notNull(request.getVersion(), "版本信息不能为空");
+            dslMockService.createService(request);
+            return Resp.success();
+        } catch (Exception e) {
+            log.error("createService Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
@@ -113,59 +112,6 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "修改服务下的接口 Method")
-    @PostMapping(value = "/updateInterface")
-    public Object updateMethod(@RequestBody UpdateMethodReq request) {
-        try {
-            dslMockService.updateMethod(request);
-            return Resp.success();
-        } catch (Exception e) {
-            log.error("updateInterface Error: {}", e.getMessage());
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
-    @ApiOperation(value = "根据id删除接口")
-    @PostMapping(value = "/deleteInterface")
-    public Object deleteMethod(@RequestBody Map<String, String> params) {
-        try {
-            String id = params.get("id");
-            RestUtil.notNull(id);
-            dslMockService.deleteMethod(Long.valueOf(id));
-            return Resp.success();
-        } catch (Exception e) {
-            log.error("deleteInterface Error: {}", e.getMessage());
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
-    @ApiOperation(value = "根据条件 List Mock Express")
-    @PostMapping(value = "/listMockExpress")
-    public Object listMockExpress(@RequestBody QueryMockReq request) {
-        try {
-            RestUtil.notNull(request.getMethodId(), "请求MockExpress规则时,methodId 不能为空");
-            QueryMockResp resp = dslMockService.listMockExpress(request);
-            return Resp.success(resp);
-        } catch (Exception e) {
-            log.error("listMockExpress Error: {}", e.getMessage());
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
-    @ApiOperation(value = "根据methodId查询 service and method name")
-    @PostMapping(value = "/getMockMethodForm")
-    public Object getMockMethodForm(@RequestBody Map<String, String> requestMap) {
-        try {
-            String id = requestMap.get("id");
-            RestUtil.notNull(id, "根据methodId查询getMockMethodForm时，id不能为空.");
-            MockMethodFormResp resp = dslMockService.getMockMethodForm(Long.valueOf(id));
-            return Resp.success(resp);
-        } catch (Exception e) {
-            log.error("listMockExpress Error: {}", e.getMessage());
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
     @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")
     @PostMapping("/createMockInfo")
     public Object createMockInfo(@RequestBody CreateMockReq request) {
@@ -175,6 +121,31 @@ public class AdminController {
             return Resp.success(RespUtil.OK);
         } catch (JSONException e) {
             log.error("createMockInfo: Json Schema 解析失败，请检查格式: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+    /**
+     * update
+     */
+    @ApiOperation(value = "修改Mock服务信息")
+    @PostMapping("/updateService")
+    public Object updateService(@RequestBody UpdateServiceReq request) {
+        try {
+            dslMockService.updateService(request);
+            return Resp.success(RespUtil.OK);
+        } catch (Exception e) {
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "修改服务下的接口Method")
+    @PostMapping(value = "/updateInterface")
+    public Object updateMethod(@RequestBody UpdateMethodReq request) {
+        try {
+            dslMockService.updateMethod(request);
+            return Resp.success();
+        } catch (Exception e) {
+            log.error("updateInterface Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
@@ -192,12 +163,46 @@ public class AdminController {
         }
     }
 
+
+
+    /**
+     * delete
+     */
+    @ApiOperation(value = "根据id删除服务")
+    @PostMapping(value = "/deleteService")
+    public Object deleteService(@RequestBody Map<String, String> params) {
+        try {
+            String id = params.get("id");
+            CommonUtil.notNull(id, "根据ID删除服务时，ID不能为空。");
+            dslMockService.deleteService(Long.valueOf(id));
+            return Resp.success();
+        } catch (Exception e) {
+            log.error("deleteService Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+
+    @ApiOperation(value = "根据id删除接口")
+    @PostMapping(value = "/deleteInterface")
+    public Object deleteMethod(@RequestBody Map<String, String> params) {
+        try {
+            String id = params.get("id");
+            CommonUtil.notNull(id);
+            dslMockService.deleteMethod(Long.valueOf(id));
+            return Resp.success();
+        } catch (Exception e) {
+            log.error("deleteInterface Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
     @ApiOperation(value = "根据ID删除某一个mock规则")
     @PostMapping("/deleteMockInfo")
     public Object deleteMockInfo(@RequestBody Map<String, String> requestMap) {
         try {
             String id = requestMap.get("id");
-            RestUtil.notNull(id, "删除Mock规则时,传入id不能为空");
+            CommonUtil.notNull(id, "删除Mock规则时,传入id不能为空");
             dslMockService.deleteMockInfo(Long.valueOf(id));
             return Resp.success();
         } catch (Exception e) {
@@ -205,6 +210,54 @@ public class AdminController {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
+
+
+    /**
+     * 其他接口
+     */
+    @ApiOperation(value = "根据methodId查询 service and method name")
+    @PostMapping(value = "/getMockMethodForm")
+    public Object getMockMethodForm(@RequestBody Map<String, String> requestMap) {
+        try {
+            String id = requestMap.get("id");
+            CommonUtil.notNull(id, "根据methodId查询getMockMethodForm时，id不能为空.");
+            MockMethodFormResp resp = dslMockService.getMockMethodForm(Long.valueOf(id));
+            return Resp.success(resp);
+        } catch (Exception e) {
+            log.error("listMockExpress Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+
+    @ApiOperation(value = "根据条件 List Service")
+    @PostMapping("/queryMetadata")
+    public Object queryMetadataById(String service) {
+        try {
+            return dslMockService.queryMetadataById(service);
+        } catch (Exception e) {
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "修改同一MockKey下的Mock规则优先级")
+    @PostMapping("/updatePriority")
+    public Object updateMockPriority(@RequestBody UpdatePriorityReq request) {
+        try {
+            dslMockService.updateMockPriority(request);
+            return Resp.success(RespUtil.OK);
+        } catch (Exception e) {
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+
+
+
+
+
+
+
 
     /**
      * 优先级修改。默认规则是 从下往上进行移动。
@@ -230,29 +283,6 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "修改同一MockKey下的Mock规则优先级")
-    @PostMapping("/updatePriority")
-    public Object updateMockPriority(@RequestBody UpdatePriorityReq request) {
-        try {
-            dslMockService.updateMockPriority(request);
-            return Resp.success(RespUtil.OK);
-        } catch (Exception e) {
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
-
-    @ApiOperation(value = "修改Mock服务信息", notes = "注意传入MockServiceVo Json形式，ID不要改变")
-    @PostMapping("/modify/service")
-    public Object updateService(@RequestBody MockServiceVo mockServiceVo) {
-        try {
-            mockService.updateService(mockServiceVo);
-            return Resp.success(RespUtil.OK);
-        } catch (Exception e) {
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
     @ApiOperation(value = "修改Mock服务信息", notes = "注意传入MockServiceVo Json形式，ID不要改变")
     @PostMapping("/modify/mock")
     public Object updateMock(@RequestBody MockVo mockVo) {
@@ -264,13 +294,5 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "元数据信息查询")
-    @PostMapping("/listMetadata")
-    public Object queryMetadataByCondition(@RequestBody QueryMetaReq request) {
-        try {
-            return dslMockService.queryMetadataByCondition(request);
-        } catch (Exception e) {
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
+
 }

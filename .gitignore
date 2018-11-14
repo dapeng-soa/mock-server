@@ -30,7 +30,7 @@ logs
 file**/**
 
 file/resources
-file/thrifts
+file/thrift
 
 **/1.md
 **/SUMMARY.md

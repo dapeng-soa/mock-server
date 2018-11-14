@@ -1,19 +1,23 @@
 package com.github.dapeng.dms.web.controller;
 
+import com.github.dapeng.core.metadata.Service;
 import com.github.dapeng.dms.thrift.MetadataHandler;
+import com.github.dapeng.dms.thrift.ThriftGenerator;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
+import com.github.dapeng.dms.web.services.MetadataService;
 import com.github.dapeng.dms.web.util.MockException;
+import com.github.dapeng.dms.web.vo.UploadResp;
 import com.github.dapeng.json.OptimizedMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+import scala.Tuple2;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -29,57 +33,94 @@ import java.util.Map;
 @RequestMapping("/admin")
 public class UploadController {
 
-    @Value("${dms.thrift.base.dir}")
+    @Value("${dms.thrift.baseDir}")
     private String thriftBaseDir;
 
-    private final MetadataHandler metadataHandler;
+    @Value("${dms.resource.baseDir}")
+    private String xmlResourceBaseDir;
 
-    public UploadController(MetadataHandler metadataHandler) {
-        this.metadataHandler = metadataHandler;
+    private final MetadataService metadataService;
+
+    public UploadController(MetadataService metadataService) {
+        this.metadataService = metadataService;
     }
 
-//    @RequestMapping("/upload")
-//    public String handleUpload() {
-//        return "upload";
-//    }
 
-//    @RequestMapping("/upload2")
-//    public String handleUpload2() {
-//        return "upload2";
-//    }
+    @PostConstruct
+    public void init() {
+        log.info("======================    DMS thrift base dir: {}     ======================", thriftBaseDir);
+        log.info("======================    DMS xml resource base dir: {}   ======================", xmlResourceBaseDir);
+    }
 
 
+    /**
+     * 上传文件
+     *
+     * @param data 上传 tag
+     * @param file 文件
+     *             解决中文问题，liunx下中文路径，图片显示问题
+     *             // 获取文件的后缀名
+     *             String suffixName = fileName.substring(fileName.lastIndexOf("."));
+     *             fileName = UUID.randomUUID() + suffixName;
+     */
     @RequestMapping("/upload")
     @ResponseBody
-    public String handleUpload(String data, MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new MockException("上传文件不能为空");
-        }
-        // 获取文件名
-        String fileName = file.getOriginalFilename();
-        log.info("上传的文件名为：" + fileName);
-        // 获取文件的后缀名
-        String suffixName = fileName.substring(fileName.lastIndexOf("."));
-        log.info("上传的后缀名为：" + suffixName);
-
-        // 文件上传后的路径
-        String rootPath = thriftBaseDir + data + "/";
-        // 解决中文问题，liunx下中文路径，图片显示问题
-        // fileName = UUID.randomUUID() + suffixName;
-        File dest = new File(rootPath + fileName);
-        // 检测是否存在目录
-        if (!dest.getParentFile().exists()) {
-            dest.getParentFile().mkdirs();
-        }
+    public Object handleUpload(String data, MultipartFile file) {
         try {
+            if (file.isEmpty()) {
+                throw new MockException("上传文件不能为空");
+            }
+            // 获取文件名
+            String fileName = file.getOriginalFilename();
+
+            if (fileName == null) {
+                throw new MockException("上传文件的文件名称不能为空");
+            }
+            // 文件上传后的路径
+            String filePath = thriftBaseDir + data + "/" + fileName;
+            File dest = new File(filePath);
+            // 检测是否存在目录
+            if (!dest.getParentFile().exists()) {
+                dest.getParentFile().mkdirs();
+            }
             file.transferTo(dest);
-            return fileName;
-        } catch (IllegalStateException | IOException e) {
-            log.error(e.getMessage(), e);
+            log.info("上传文件成功，文件名: {},保存路径: {}", fileName, filePath);
+            return Resp.success(new UploadResp(fileName, filePath));
+        } catch (Exception e) {
+            log.error("handleUpload Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ResponseBody
+    @RequestMapping("/thriftGenerator")
+    public List<Service> thriftGenerator(String tag) {
+        try {
+            return metadataService.parseMetadata(thriftBaseDir, xmlResourceBaseDir, tag);
+        } catch (Exception e) {
+            log.error(e.getMessage());
             return null;
         }
-//        return "上传失败";
     }
+
+
+    @ResponseBody
+    @RequestMapping("/startParse")
+    public Object parseMetadata(String dir) {
+        try {
+            String targetDir = xmlResourceBaseDir + "/" + dir;
+            List<Map<String, OptimizedMetadata.OptimizedService>> servicesMapList = metadataService.loadMetadata(targetDir);
+            if (servicesMapList == null) {
+                throw new IllegalArgumentException("根据路径 [" + targetDir + "] 未解析处元数据信息");
+            }
+            return servicesMapList;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, "parseMetadata failed: " + e.getMessage());
+        }
+
+    }
+
 
     //文件下载相关代码
     @RequestMapping("/download")
@@ -166,6 +207,7 @@ public class UploadController {
         return "upload successful";
     }
 
+
     //多文件上传
     @RequestMapping(value = "/batch/upload2", method = RequestMethod.POST)
     @ResponseBody
@@ -196,22 +238,16 @@ public class UploadController {
         return "SUCCESS";
     }
 
-    @ResponseBody
-    @RequestMapping("/startParse")
-    public Object parseMetadata(String targetDir) {
-        try {
-            List<Map<String, OptimizedMetadata.OptimizedService>> servicesMapList = metadataHandler.loadMetadata(targetDir);
 
-            if (servicesMapList == null) {
-                throw new IllegalArgumentException("根据路径 [" + targetDir + "] 未解析处元数据信息");
-            }
-            return servicesMapList;
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return Resp.error(RespUtil.MOCK_ERROR, "parseMetadata failed: " + e.getMessage());
-        }
-
+    /*@RequestMapping("/upload")
+    public String handleUpload() {
+        return "upload";
     }
+
+    @RequestMapping("/upload2")
+    public String handleUpload2() {
+        return "upload2";
+    }*/
 
 
 }
