@@ -7,6 +7,7 @@ import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.dms.web.vo.request.*;
 import com.github.dapeng.dms.web.vo.response.MockMethodFormResp;
+import com.github.dapeng.dms.web.vo.response.QueryMetaResp;
 import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
 import com.github.dapeng.dms.web.vo.response.QueryMockResp;
 import io.swagger.annotations.*;
@@ -76,7 +77,8 @@ public class AdminController {
     @PostMapping("/listMetadata")
     public Object queryMetadataByCondition(@RequestBody QueryMetaReq request) {
         try {
-            return dslMockService.queryMetadataByCondition(request);
+            QueryMetaResp metaResp = dslMockService.queryMetadataByCondition(request);
+            return Resp.success(metaResp);
         } catch (Exception e) {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
@@ -124,6 +126,7 @@ public class AdminController {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
+
     /**
      * update
      */
@@ -162,7 +165,6 @@ public class AdminController {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
-
 
 
     /**
@@ -250,13 +252,6 @@ public class AdminController {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
-
-
-
-
-
-
-
 
 
     /**

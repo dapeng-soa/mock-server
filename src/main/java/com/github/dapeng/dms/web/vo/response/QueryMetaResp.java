@@ -14,15 +14,15 @@ import java.util.List;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class QueryMetaResp {
-    private List<MetadataVo> metadataVoList;
+    private List<MetadataVo> metadataList;
     private DmsPageResp pageResponse;
 
-    public QueryMetaResp(List<MetadataVo> metadataVoList) {
-        this.metadataVoList = metadataVoList;
+    public QueryMetaResp(List<MetadataVo> metadataList) {
+        this.metadataList = metadataList;
     }
 
-    public QueryMetaResp(List<MetadataVo> metadataVoList, DmsPageResp pageResponse) {
-        this.metadataVoList = metadataVoList;
+    public QueryMetaResp(List<MetadataVo> metadataList, DmsPageResp pageResponse) {
+        this.metadataList = metadataList;
         this.pageResponse = pageResponse;
     }
 }

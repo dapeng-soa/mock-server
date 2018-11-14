@@ -20,6 +20,7 @@ import com.github.dapeng.dms.web.vo.request.*;
 import com.github.dapeng.dms.web.vo.response.*;
 import com.github.dapeng.json.OptimizedMetadata;
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -337,10 +338,19 @@ public class DslMockService implements InitializingBean {
         }
     }
 
-    public Object queryMetadataByCondition(QueryMetaReq request) {
+    public QueryMetaResp queryMetadataByCondition(QueryMetaReq request) {
         DmsPageReq dmsPage = request.getPageRequest();
         QMockMetadata qMeta = QMockMetadata.mockMetadata;
-        JPAQuery<MockMetadata> metaQuery = queryDsl.selectFrom(qMeta);
+        //不查 metadata，提升效率
+        JPAQuery<Tuple> metaQuery = queryDsl.select(
+                qMeta.id,
+                qMeta.simpleName,
+                qMeta.serviceName,
+                qMeta.version,
+                qMeta.type,
+                qMeta.createdAt,
+                qMeta.updatedAt
+        ).from(qMeta);
 
         if (request.getMetadataId() != null) {
             metaQuery.where(qMeta.id.eq(request.getMetadataId()));
@@ -355,11 +365,27 @@ public class DslMockService implements InitializingBean {
         if (dmsPage != null) {
             metaQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
-        QueryResults<MockMetadata> results = metaQuery.orderBy(qMeta.id.asc()).fetchResults();
-        log.info("Metadata service results size: {}", results.getResults().size());
+        QueryResults<Tuple> queryResults = metaQuery.orderBy(qMeta.id.asc()).fetchResults();
+        List<MetadataVo> metadataVoList = queryResults.getResults().stream().map(t -> {
+            Long id = t.get(qMeta.id);
+            String simpleName = t.get(qMeta.simpleName);
+            String serviceName = t.get(qMeta.serviceName);
+            String version = t.get(qMeta.version);
+            int type = t.get(qMeta.type);
+            Timestamp createdAt = t.get(qMeta.createdAt);
+            Timestamp updatedAt = t.get(qMeta.updatedAt);
+            String metaKey = CommonUtil.combine(serviceName, version);
+            OptimizedMetadata.OptimizedService optimizedService = MetaMemoryCache.getFullServiceMap().get(metaKey);
+            int methodSize = 0;
+            if (optimizedService != null) {
+                methodSize = optimizedService.getService().methods.size();
+            }
+            return new MetadataVo(id, simpleName, serviceName, version, methodSize, createdAt);
+        }).collect(Collectors.toList());
+        log.info("Metadata service results size: {}", metadataVoList.size());
 
         //获取 metadata 的返回 List 信息
-        List<MetadataVo> metadataVoList = results.getResults().stream()
+        /*List<MetadataVo> metadataVoList = metadataEntityList.stream()
                 .map(m -> {
                     String serviceNmae = m.getServiceName();
                     String version = m.getVersion();
@@ -370,10 +396,10 @@ public class DslMockService implements InitializingBean {
                         methodSize = optimizedService.getService().methods.size();
                     }
                     return new MetadataVo(m.getId(), m.getSimpleName(), serviceNmae, version, methodSize, m.getCreatedAt());
-                }).collect(Collectors.toList());
+                }).collect(Collectors.toList());*/
 
         if (dmsPage != null) {
-            DmsPageResp dmsPageResp = new DmsPageResp(dmsPage.getStart(), dmsPage.getLimit(), results.getTotal());
+            DmsPageResp dmsPageResp = new DmsPageResp(dmsPage.getStart(), dmsPage.getLimit(), queryResults.getTotal());
             return new QueryMetaResp(metadataVoList, dmsPageResp);
         }
         return new QueryMetaResp(metadataVoList);
