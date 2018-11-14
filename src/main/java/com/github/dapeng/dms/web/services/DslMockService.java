@@ -7,6 +7,7 @@ import com.github.dapeng.dms.web.entity.MockService;
 import com.github.dapeng.dms.web.entity.dto.MockDto;
 import com.github.dapeng.dms.web.repository.MockMethodRepository;
 import com.github.dapeng.dms.web.repository.MockRepository;
+import com.github.dapeng.dms.web.repository.MockServiceRepository;
 import com.github.dapeng.dms.web.util.MockException;
 import com.github.dapeng.dms.web.util.MockUtils;
 import com.github.dapeng.dms.web.vo.MockMethodVo;
@@ -24,11 +25,17 @@ import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
@@ -45,6 +52,7 @@ import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
 @Transactional
 public class DslMockService implements InitializingBean {
 
+    private final MockServiceRepository serviceRepository;
     private final MockMethodRepository methodRepository;
     private final MockRepository mockRepository;
     //实体管理者
@@ -52,7 +60,8 @@ public class DslMockService implements InitializingBean {
     //JPA查询工厂
     private JPAQueryFactory queryDsl;
 
-    public DslMockService(MockMethodRepository methodRepository, MockRepository mockRepository, EntityManager entityManager) {
+    public DslMockService(MockServiceRepository serviceRepository, MockMethodRepository methodRepository, MockRepository mockRepository, EntityManager entityManager) {
+        this.serviceRepository = serviceRepository;
         this.methodRepository = methodRepository;
         this.mockRepository = mockRepository;
         this.entityManager = entityManager;
@@ -105,6 +114,7 @@ public class DslMockService implements InitializingBean {
         }
         return Resp.success(new ListServiceResp(mockServiceVoList));
     }
+
 
     /**
      * query methods
@@ -236,6 +246,28 @@ public class DslMockService implements InitializingBean {
     }
 
     /**
+     * 创建 mock 基础服务
+     */
+    public void createService(CreateServiceReq request) {
+        QMockService qService = QMockService.mockService;
+        MockService mockService = queryDsl
+                .selectFrom(qService)
+                .where(qService.serviceName.eq(request.getService())
+                        .and(qService.version.eq(request.getVersion())))
+                .fetchFirst();
+        if (mockService != null) {
+            throw new MockException("新增的服务已存在,请勿重复创建相同名称的服务");
+        }
+        MockService service;
+        if (request.getSimpleName() != null) {
+            service = new MockService(request.getSimpleName(), request.getService(), request.getVersion());
+        } else {
+            service = new MockService(request.getService(), request.getVersion());
+        }
+        serviceRepository.save(service);
+    }
+
+    /**
      * 创建 mock 规则
      */
     public void createMockInfo(CreateMockReq request) throws JSONException {
@@ -288,6 +320,13 @@ public class DslMockService implements InitializingBean {
         mockUpdate.where(qMock.id.eq(request.getMockId())).execute();
     }
 
+    /**
+     * 删除服务
+     */
+    public void deleteService(Long id) {
+        QMockService qService = QMockService.mockService;
+        queryDsl.delete(qService).where(qService.id.eq(id)).execute();
+    }
 
     public void deleteMockInfo(Long id) {
         QMock qMock = QMock.mock;
@@ -296,6 +335,23 @@ public class DslMockService implements InitializingBean {
             throw new MockException("根据Id删除Mock规则异常,可能数据并不存在");
         }
     }
+
+    public Object queryMetadataByCondition(QueryMetaReq request) {
+        return "";
+    }
+
+    public void updateMockPriority(UpdatePriorityReq request) {
+        long begin = 1000L;
+        QMock qMock = QMock.mock;
+        List<Long> priorityList = request.getPriorityList();
+        for (Long value : priorityList) {
+            queryDsl.update(qMock).set(qMock.sort, begin++).where(qMock.id.eq(value)).execute();
+        }
+    }
+
+
+
+
 
 
 

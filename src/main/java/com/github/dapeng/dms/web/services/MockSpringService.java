@@ -1,23 +1,17 @@
 package com.github.dapeng.dms.web.services;
 
-import com.github.dapeng.dms.sql.MockServerDao;
 import com.github.dapeng.dms.web.entity.Mock;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.mock.matchers.HttpRequestMatcher;
 import com.github.dapeng.dms.web.repository.MetadataRepository;
 import com.github.dapeng.dms.web.repository.MockServiceRepository;
 import com.github.dapeng.dms.web.entity.MockContext;
-import com.github.dapeng.dms.mock.matchers.validator.JsonSchemaValidator;
 import com.github.dapeng.dms.web.repository.MockRepository;
 import com.github.dapeng.dms.mock.request.HttpRequestContext;
 import com.github.dapeng.dms.web.util.MockUtils;
 import com.github.dapeng.dms.web.vo.MockServiceVo;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Constants;
-import com.github.dapeng.dms.web.vo.request.QueryServiceReq;
-import com.github.dapeng.dms.web.vo.request.ServiceAddRequest;
-import com.github.dapeng.dms.dto.MockServiceDto;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.json.JSONException;
@@ -27,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Timestamp;
 import java.util.List;
 
 import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
@@ -39,20 +32,19 @@ import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
 @Service
 @Slf4j
 @Transactional(rollbackFor = Throwable.class)
-public class MockService {
+public class MockSpringService {
 
     private final MockRepository mockRepository;
     private final MockServiceRepository mockServiceRepository;
     private final MetadataRepository metadataRepository;
 
 
-    public MockService(MockRepository mockRepository, MockServiceRepository mockServiceRepository,
-                       MetadataRepository metadataRepository) {
+    public MockSpringService(MockRepository mockRepository, MockServiceRepository mockServiceRepository,
+                             MetadataRepository metadataRepository) {
         this.mockRepository = mockRepository;
         this.mockServiceRepository = mockServiceRepository;
         this.metadataRepository = metadataRepository;
     }
-
 
     public String mock(String serviceName, String version,
                        String methodName, String parameter, HttpServletRequest request) {
@@ -72,75 +64,6 @@ public class MockService {
             }
         }
         return null;
-    }
-
-
-    /**
-     * add service-info
-     */
-    public MockServiceVo addServiceInfo(ServiceAddRequest request) {
-        com.github.dapeng.dms.web.entity.MockService serviceInfo;
-        if (request.getMetadata() != null) {
-            MockMetadata metadata = metadataRepository.save(new MockMetadata(request.getServiceName(), request.getMetadata(), "1.0", 1));
-            serviceInfo = new com.github.dapeng.dms.web.entity.MockService(request.getServiceName(), metadata.getId(), new Timestamp(System.currentTimeMillis()));
-        } else {
-            serviceInfo = new com.github.dapeng.dms.web.entity.MockService(request.getServiceName(), 0L, new Timestamp(System.currentTimeMillis()));
-        }
-        mockServiceRepository.save(serviceInfo);
-        return new MockServiceVo(serviceInfo.getId(), request.getServiceName());
-    }
-
-    /**
-     * 会按照顺序进行存放mock
-     *
-     * @throws JSONException 如果 Json 格式不正确会抛此异常
-     */
-    public void addMockInfo(String service, String method, String version,
-                            String mockExpress, String mockData) throws JSONException {
-        JsonSchemaValidator.matcher(mockExpress);
-        JsonSchemaValidator.matcher(mockData);
-        //convert
-        String mockCompileJson = MockUtils.convertJsonValueToPatternJson(mockExpress);
-
-        com.github.dapeng.dms.web.entity.MockService serviceInfo = mockServiceRepository.findByServiceName(service);
-
-        if (serviceInfo == null) {
-            serviceInfo = mockServiceRepository.save(new com.github.dapeng.dms.web.entity.MockService(service, new Timestamp(System.currentTimeMillis())));
-        }
-        String mockKey = MockUtils.combineMockKey(service, method, version);
-        Mock latestMock = mockRepository.findMockByMockKeyOrderBySortDesc(mockKey);
-
-        if (latestMock != null) {
-            Mock newMock = new Mock(service, method, version,
-                    HttpMethod.POST.name(), mockExpress, mockCompileJson, mockData,
-                    serviceInfo.getId(), latestMock.getSort() + DEFAULT_SORT_NUM, new Timestamp(System.currentTimeMillis()));
-            mockRepository.save(newMock);
-        } else {
-            Mock newMock = new Mock(service, method, version,
-                    HttpMethod.POST.name(), mockExpress, mockCompileJson,
-                    mockData, serviceInfo.getId(), DEFAULT_SORT_NUM, new Timestamp(System.currentTimeMillis()));
-            mockRepository.save(newMock);
-        }
-    }
-
-
-    public List<com.github.dapeng.dms.web.entity.MockService> findMockServiceList() {
-        return mockServiceRepository.findAll();
-    }
-
-    public List<MockServiceDto> findMockServiceListByCondition(QueryServiceReq request) {
-        return MockServerDao.listServicesByCondition(request);
-    }
-
-
-    /**
-     * 根据 mock-key 查询已经添加的mock规则，会根据用户排过序的规则显示。
-     */
-    public List<Mock> findMockDataByMockKey(String service, String method, String version) {
-        String mockKey = MockUtils.combineMockKey(service, method, version);
-        List<Mock> mocks = mockRepository.findMockByMockKey(mockKey);
-        mocks.sort((m1, m2) -> (int) (m1.getSort() - m2.getSort()));
-        return mocks;
     }
 
     /**
@@ -185,8 +108,6 @@ public class MockService {
         return metadataRepository.findByServiceName(serviceName);
 
     }
-
-
 
 
 

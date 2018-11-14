@@ -3,8 +3,10 @@ package com.github.dapeng.dms.web.controller;
 import com.github.dapeng.dms.thrift.MetadataHandler;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
+import com.github.dapeng.dms.web.util.MockException;
 import com.github.dapeng.json.OptimizedMetadata;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -24,7 +26,11 @@ import java.util.Map;
  */
 @Controller
 @Slf4j
+@RequestMapping("/admin")
 public class UploadController {
+
+    @Value("${dms.thrift.base.dir}")
+    private String thriftBaseDir;
 
     private final MetadataHandler metadataHandler;
 
@@ -32,37 +38,35 @@ public class UploadController {
         this.metadataHandler = metadataHandler;
     }
 
+//    @RequestMapping("/upload")
+//    public String handleUpload() {
+//        return "upload";
+//    }
+
+//    @RequestMapping("/upload2")
+//    public String handleUpload2() {
+//        return "upload2";
+//    }
+
+
     @RequestMapping("/upload")
-    public String handleUpload() {
-        return "upload";
-    }
-
-    @RequestMapping("/upload2")
-    public String handleUpload2() {
-        return "upload2";
-    }
-
-
-    @RequestMapping("/uploadFile")
     @ResponseBody
-    public String handleUpload(MultipartFile file) {
+    public String handleUpload(String data, MultipartFile file) {
         if (file.isEmpty()) {
-            log.info("文件为空");
-            return "文件为空";
+            throw new MockException("上传文件不能为空");
         }
         // 获取文件名
         String fileName = file.getOriginalFilename();
         log.info("上传的文件名为：" + fileName);
-
         // 获取文件的后缀名
         String suffixName = fileName.substring(fileName.lastIndexOf("."));
         log.info("上传的后缀名为：" + suffixName);
 
         // 文件上传后的路径
-        String filePath = "/Users/maple/ideaspace/dapeng/dapeng-mock-server/file/";
+        String rootPath = thriftBaseDir + data + "/";
         // 解决中文问题，liunx下中文路径，图片显示问题
         // fileName = UUID.randomUUID() + suffixName;
-        File dest = new File(filePath + fileName);
+        File dest = new File(rootPath + fileName);
         // 检测是否存在目录
         if (!dest.getParentFile().exists()) {
             dest.getParentFile().mkdirs();
@@ -70,13 +74,11 @@ public class UploadController {
         try {
             file.transferTo(dest);
             return fileName;
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (IllegalStateException | IOException e) {
             log.error(e.getMessage(), e);
+            return null;
         }
-        return "上传失败";
-
+//        return "上传失败";
     }
 
     //文件下载相关代码

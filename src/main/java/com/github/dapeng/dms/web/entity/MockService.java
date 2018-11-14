@@ -18,6 +18,9 @@ public class MockService {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "simple_name")
+    private String simpleName;
+
     @Column(name = "service")
     private String serviceName;
 
@@ -33,15 +36,20 @@ public class MockService {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
-
-    public MockService(String serviceName, Timestamp createdAt) {
+    public MockService(String serviceName, String version) {
         this.serviceName = serviceName;
-        this.createdAt = createdAt;
+        this.version = version;
+        this.simpleName = this.serviceName.substring(this.serviceName.lastIndexOf(".") + 1);
+        this.createdAt = new Timestamp(System.currentTimeMillis());
+
     }
 
-    public MockService(String serviceName, long metadataId, Timestamp createdAt) {
+    public MockService(String simpleName, String serviceName, String version) {
+        this.simpleName = simpleName;
         this.serviceName = serviceName;
-        this.metadataId = metadataId;
-        this.createdAt = createdAt;
+        this.version = version;
+        this.createdAt = new Timestamp(System.currentTimeMillis());
     }
+
+
 }

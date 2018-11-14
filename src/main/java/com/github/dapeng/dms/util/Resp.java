@@ -21,6 +21,7 @@ public class Resp<T> {
     private Resp(T success) {
         this.status = 1;
         this.success = success;
+        this.responseMsg = success;
     }
 
     private Resp(String responseCode, T responseMsg) {

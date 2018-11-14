@@ -29,11 +29,11 @@ import java.util.Map;
 @Slf4j
 public class AdminController {
 
-    private final com.github.dapeng.dms.web.services.MockService mockService;
+    private final com.github.dapeng.dms.web.services.MockSpringService mockService;
 
     private final DslMockService dslMockService;
 
-    public AdminController(com.github.dapeng.dms.web.services.MockService mockService, DslMockService dslMockService) {
+    public AdminController(com.github.dapeng.dms.web.services.MockSpringService mockService, DslMockService dslMockService) {
         this.mockService = mockService;
         this.dslMockService = dslMockService;
     }
@@ -59,15 +59,31 @@ public class AdminController {
     }
 
 
-    @ApiOperation(value = "添加一个Mock服务", notes = "注意服务名包全名")
+    @ApiOperation(value = "添加一个Mock基础服务")
     @ApiResponse(code = 200, message = "返回添加成功后的MockServiceVo对象")
-    @PostMapping("/addService")
-    public Object addServiceInfo(@RequestBody ServiceAddRequest request) {
+    @PostMapping("/createService")
+    public Object createService(@RequestBody CreateServiceReq request) {
         try {
-            MockServiceVo serviceVo = mockService.addServiceInfo(request);
-            return Resp.success(serviceVo);
+            RestUtil.notNull(request.getService(), "服务全称不能为空");
+            RestUtil.notNull(request.getVersion(), "版本信息不能为空");
+            dslMockService.createService(request);
+            return Resp.success();
         } catch (Exception e) {
-            log.error("addService Error: {}", e.getMessage());
+            log.error("createService Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "根据id删除服务")
+    @PostMapping(value = "/deleteService")
+    public Object deleteService(@RequestBody Map<String, String> params) {
+        try {
+            String id = params.get("id");
+            RestUtil.notNull(id, "根据ID删除服务时，ID不能为空。");
+            dslMockService.deleteService(Long.valueOf(id));
+            return Resp.success();
+        } catch (Exception e) {
+            log.error("deleteService Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
@@ -203,10 +219,22 @@ public class AdminController {
     @ApiImplicitParams({@ApiImplicitParam(name = "frontId", value = "修改的规则需要移动的规则id之上的规则ID", dataType = "String"),
             @ApiImplicitParam(name = "belowId", value = "需要修改的规则的Id", dataType = "String")
     })
-    @PostMapping("/modify/priority")
+
+    @PostMapping("/old/updatePriority")
     public Object modifyMockPriority(@RequestParam long frontId, @RequestParam long belowId) {
         try {
             mockService.modifyMockPriority(frontId, belowId);
+            return Resp.success(RespUtil.OK);
+        } catch (Exception e) {
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "修改同一MockKey下的Mock规则优先级")
+    @PostMapping("/updatePriority")
+    public Object updateMockPriority(@RequestBody UpdatePriorityReq request) {
+        try {
+            dslMockService.updateMockPriority(request);
             return Resp.success(RespUtil.OK);
         } catch (Exception e) {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
@@ -231,6 +259,16 @@ public class AdminController {
         try {
             mockService.updateMock(mockVo);
             return Resp.success(RespUtil.OK);
+        } catch (Exception e) {
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "元数据信息查询")
+    @PostMapping("/listMetadata")
+    public Object queryMetadataByCondition(@RequestBody QueryMetaReq request) {
+        try {
+            return dslMockService.queryMetadataByCondition(request);
         } catch (Exception e) {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }

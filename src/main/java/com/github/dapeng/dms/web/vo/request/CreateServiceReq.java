@@ -9,13 +9,10 @@ import java.util.List;
  * @since 2018-11-08 11:38 AM
  */
 @Data
-public class ServiceAddRequest {
-    private String serviceName;
-
+public class CreateServiceReq {
+    private String simpleName;
+    private String service;
     private String version;
-
     private String metadata;
-
-    private List<MethodAddRequest> methodList;
 
 }
