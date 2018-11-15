@@ -40,7 +40,10 @@ spring:
 server:
   port: 9000
 
+
 dms:
+  first:
+    baseDir: /Users/maple/ideaspace/dapeng/dapeng-mock-server/first/
   thrift:
     baseDir: /Users/maple/ideaspace/dapeng/dapeng-mock-server/file/thrift/
   resource:

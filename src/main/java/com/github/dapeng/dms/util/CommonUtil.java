@@ -27,9 +27,18 @@ public class CommonUtil {
         }
     }
 
+    public static <T> T notNullRet(T req, String msg) {
+        if (req == null) {
+            throw new MockException(msg);
+        }
+        return req;
+    }
+
     public static String combine(String service, String version) {
         return service + ":" + version;
     }
+
+
 
     public static String longToStringDate(long timeStamp) {
         Instant instant = Instant.ofEpochMilli(timeStamp);

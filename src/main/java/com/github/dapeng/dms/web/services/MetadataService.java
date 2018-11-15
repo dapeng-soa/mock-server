@@ -3,17 +3,24 @@ package com.github.dapeng.dms.web.services;
 import com.github.dapeng.core.metadata.Method;
 import com.github.dapeng.core.metadata.Service;
 import com.github.dapeng.dms.mock.metadata.MetaMemoryCache;
-import com.github.dapeng.dms.thrift.MetadataHandler;
+import com.github.dapeng.dms.mock.metadata.MetaSearcher;
 import com.github.dapeng.dms.thrift.ThriftGenerator;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.QMockMetadata;
 import com.github.dapeng.dms.web.repository.MetadataRepository;
 import com.github.dapeng.dms.web.util.MockException;
+import com.github.dapeng.dms.web.vo.MetaMethodVo;
+import com.github.dapeng.dms.web.vo.request.DmsPageReq;
+import com.github.dapeng.dms.web.vo.request.QueryMetaMethodReq;
 import com.github.dapeng.dms.web.vo.response.CreateMetaServiceResp;
+import com.github.dapeng.dms.web.vo.response.DmsPageResp;
+import com.github.dapeng.dms.web.vo.response.QueryMetaMethodResp;
 import com.github.dapeng.json.OptimizedMetadata;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import scala.Tuple2;
 
 import javax.persistence.EntityManager;
@@ -28,7 +35,7 @@ import java.util.stream.Collectors;
  */
 @org.springframework.stereotype.Service
 @Slf4j
-public class MetadataService implements InitializingBean {
+public class MetadataService implements InitializingBean, ApplicationRunner {
 
 
     private final MetadataRepository metaRepository;
@@ -48,42 +55,26 @@ public class MetadataService implements InitializingBean {
         log.info("init JPAQueryFactory successfully");
     }
 
-    public List<Service> parseMetadata(String thriftBaseDir, String resourceBaseDir, String tag) {
-        List<Service> serviceList = thriftGenerator(thriftBaseDir, resourceBaseDir, tag);
 
-        serviceList.forEach(this::processService);
-
-        List<OptimizedMetadata.OptimizedService> optimizedServiceList = serviceList.stream()
-                .map(OptimizedMetadata.OptimizedService::new).collect(Collectors.toList());
-        // process metadata
-        serviceList.forEach(this::processMetadataService);
-
-        return null;
-    }
-
-    public CreateMetaServiceResp processService(Service service) {
-        String simpleName = service.name;
-        String serviceName = service.namespace + "." + service.name;
-        String version = service.meta.version;
-        List<Method> methods = service.methods;
-        new CreateMetaServiceResp(simpleName, serviceName, version, methods.size());
-        StringWriter metadata = new StringWriter();
-        JAXB.marshal(service, metadata);
-
-        QMockMetadata qMeta = QMockMetadata.mockMetadata;
-        MockMetadata oldMeta = queryDsl.selectFrom(qMeta).where(qMeta.serviceName.eq(serviceName).and(qMeta.version.eq(version))).fetchFirst();
-        if (oldMeta != null) {
-            metaRepository.delete(oldMeta);
+    /**
+     * 解析上传的 thrift 文件并
+     * 1).生成 xml 存入 数据库。
+     * 2).解析 现有服务信息存入 内存。
+     *
+     * @param tag 服务 tag
+     */
+    public void processThriftGenerator(String thriftBaseDir, String resourceBaseDir, String tag) {
+        List<Service> serviceList = doThriftGenerator(thriftBaseDir, resourceBaseDir, tag);
+        if (serviceList != null) {
+            //处理和保存...
+            serviceList.forEach(service -> {
+                saveMetaService(service);
+                cachedMetaService(service);
+            });
         }
-        //保存元数据信息
-        metaRepository.save(new MockMetadata(simpleName, serviceName, version, metadata.toString()));
-
-        return null;
-
     }
 
-
-    public List<Service> thriftGenerator(String thriftBaseDir, String resourceBaseDir, String tag) {
+    private List<Service> doThriftGenerator(String thriftBaseDir, String resourceBaseDir, String tag) {
         try {
             String thriftDir = thriftBaseDir + tag;
             String resourceDir = resourceBaseDir + tag;
@@ -96,25 +87,51 @@ public class MetadataService implements InitializingBean {
         }
     }
 
-
-    private Map<String, OptimizedMetadata.OptimizedService> loadServicesMetadata(String metadata) {
-        Map<String, OptimizedMetadata.OptimizedService> services = new TreeMap<>();
-//        log.info("fetched the  metadataClient, metadata:{}", metadata.substring(0, 50));
-        try (StringReader reader = new StringReader(metadata)) {
-            Service serviceData = JAXB.unmarshal(reader, Service.class);
-            OptimizedMetadata.OptimizedService optimizedService = new OptimizedMetadata.OptimizedService(serviceData);
-            services.put(optimizedService.getService().getName(), optimizedService);
-            processMetadataService(serviceData);
-        } catch (Exception e) {
-            log.error("metadata解析出错");
-            log.error(e.getMessage(), e);
-
-            log.info(metadata);
-        }
-        return services;
+    /**
+     * 解析上传的 xml 文件并
+     * 1).将 xml 存入 数据库。
+     * 2).解析 现有服务信息存入 内存。
+     *
+     * @param tag 服务 tag
+     */
+    public void processXmlGenerator(String resourcesDir, String tag) throws IOException {
+        String targetDir = resourcesDir + tag;
+        List<String> xmlStringList = loadXmlReSourcesFromDist(targetDir);
+        xmlStringList.forEach(str -> {
+            Service service = unmarshalMetadataFromStream(str);
+            if (service != null) {
+                saveMetaService(service);
+                cachedMetaService(service);
+            }
+        });
     }
 
-    public void processMetadataService(Service service) {
+
+    /**
+     * 保存元数据信息
+     */
+    private void saveMetaService(Service service) {
+        String simpleName = service.name;
+        String serviceName = service.namespace + "." + service.name;
+        String version = service.meta.version;
+        List<Method> methods = service.methods;
+        new CreateMetaServiceResp(simpleName, serviceName, version, methods.size());
+        StringWriter metadata = new StringWriter();
+        JAXB.marshal(service, metadata);
+        QMockMetadata qMeta = QMockMetadata.mockMetadata;
+        MockMetadata oldMeta = queryDsl.selectFrom(qMeta).where(qMeta.serviceName.eq(serviceName).and(qMeta.version.eq(version))).fetchFirst();
+        if (oldMeta != null) {
+            metaRepository.delete(oldMeta);
+        }
+        //保存元数据信息
+        metaRepository.save(new MockMetadata(simpleName, serviceName, version, metadata.toString()));
+
+    }
+
+    /**
+     * 将 metadata 信息放入内存缓存.
+     */
+    public void cachedMetaService(Service service) {
         //etc. 服务简名key ==> OrderService:1.0.0
         String simpleKey = String.format("%s:%s", service.name, service.getMeta().version);
         //etc. 服务全名key ==> com.today.api.order.service.OrderService:1.0.0
@@ -124,8 +141,9 @@ public class MetadataService implements InitializingBean {
 
         MetaMemoryCache.getSimpleServiceMap().put(simpleKey, optimizedService);
         MetaMemoryCache.getFullServiceMap().put(fullKey, optimizedService);
-        log.info("存储服务 {} 元信息成功,目前已存在的元数据数量：{}", service.getName(), MetaMemoryCache.getSimpleServiceMap().size());
+        log.info("存储服务 {} 元信息缓存成功,目前已存在的元数据数量：{}", service.getName(), MetaMemoryCache.getSimpleServiceMap().size());
     }
+
 
     /************************************************************************************************************************************
      *                                                                                                                                  *
@@ -134,7 +152,7 @@ public class MetadataService implements InitializingBean {
      * @throws IOException                                                                                                              *
      * **********************************************************************************************************************************
      */
-    public List<Map<String, OptimizedMetadata.OptimizedService>> loadMetadata(String targetDir) throws IOException {
+    public List<String> loadXmlReSourcesFromDist(String targetDir) throws IOException {
         List<String> serviceXmlList = new ArrayList<>();
         File folder = new File(targetDir);
         if (!folder.exists()) {
@@ -162,14 +180,75 @@ public class MetadataService implements InitializingBean {
                 }
 
             }
-            List<Map<String, OptimizedMetadata.OptimizedService>> servicesMapList =
-                    serviceXmlList.stream().map(this::loadServicesMetadata).collect(Collectors.toList());
-            StringBuilder logBuilder = new StringBuilder();
-            MetaMemoryCache.getSimpleServiceMap().forEach((k, v) -> logBuilder.append(k).append(",  "));
-            log.info("服务实例列表:\n #### [{}] ####", logBuilder);
-            return servicesMapList;
+            log.info("========= load metadata xml resources count: {} from dir {}   =========", serviceXmlList.size(), targetDir);
+        } else {
+            log.error("{} 路径下没有元数据xml文件进行解析", targetDir);
         }
-        log.error("{} 路径下没有元数据信息解析", targetDir);
+        return serviceXmlList;
+    }
+
+    private Service unmarshalMetadataFromStream(String metadata) {
+        try (StringReader reader = new StringReader(metadata)) {
+            return JAXB.unmarshal(reader, Service.class);
+        } catch (Exception e) {
+            log.error("metadata解析出错");
+            log.error(e.getMessage(), e);
+            log.info(metadata);
+        }
         return null;
+    }
+
+    /************************************************************************************************************************************
+     *      增删该查
+     * **********************************************************************************************************************************
+     */
+    public QueryMetaMethodResp queryMetaDetailMethod(QueryMetaMethodReq request) {
+        DmsPageReq dmsPage = request.getPageRequest();
+        QMockMetadata qMeta = QMockMetadata.mockMetadata;
+        MockMetadata metadata = queryDsl.selectFrom(qMeta).where(qMeta.id.eq(request.getMetadataId())).fetchFirst();
+
+
+        MetaSearcher.Query metaQuery = new MetaSearcher.Query();
+        metaQuery.serviceAndVersion(metadata.getServiceName(), metadata.getVersion());
+
+        if (request.getMethodName() != null) {
+            metaQuery.method(request.getMethodName());
+        }
+        if (dmsPage != null) {
+            metaQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
+        }
+        MetaSearcher.Result queryResults = metaQuery.executeMethod();
+        List<MetaMethodVo> methodVoList = queryResults.methodList.stream().map(m -> new MetaMethodVo(m.getName(), m.getDoc())).collect(Collectors.toList());
+
+
+        log.info("Metadata Detail Method results size: {}", methodVoList.size());
+
+        if (dmsPage != null) {
+            DmsPageResp dmsPageResp = new DmsPageResp(dmsPage.getStart(), dmsPage.getLimit(), queryResults.records);
+            return new QueryMetaMethodResp(methodVoList, dmsPageResp);
+        }
+        return new QueryMetaMethodResp(methodVoList);
+    }
+
+
+    /*********************************************************************************************
+     *                                                                                           *
+     *  等待服务启动完成..                                                                         *
+     *                                                                                           *
+     * *******************************************************************************************
+     */
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        List<MockMetadata> metadataList = metaRepository.findAll();
+        metadataList.forEach(metadata -> {
+            String metadataXml = metadata.getMetadata();
+            Service serviceData = unmarshalMetadataFromStream(metadataXml);
+            if (serviceData != null) {
+                cachedMetaService(serviceData);
+            } else {
+                log.warn("元数据文件名为 {} 解析 service为空，跳过 cache 数据到内存.", metadata);
+            }
+        });
+        log.info("====================== load existing in db  metadata service end ====================== ");
     }
 }

@@ -11,7 +11,6 @@ import java.util.TreeMap;
  * @since 2018-11-14 5:59 PM
  */
 public class MetaMemoryCache {
-
     /**
      * 以服务的SimpleName和version拼接作为key，保存服务元数据的map
      * etc. AdminSkuPriceService:1.0.0 -> 元信息
@@ -30,4 +29,5 @@ public class MetaMemoryCache {
     public static Map<String, OptimizedMetadata.OptimizedService> getFullServiceMap() {
         return fullServiceMap;
     }
+
 }

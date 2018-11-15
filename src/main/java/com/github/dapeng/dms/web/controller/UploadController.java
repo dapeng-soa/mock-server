@@ -1,28 +1,23 @@
 package com.github.dapeng.dms.web.controller;
 
-import com.github.dapeng.core.metadata.Service;
-import com.github.dapeng.dms.thrift.MetadataHandler;
-import com.github.dapeng.dms.thrift.ThriftGenerator;
+import com.github.dapeng.dms.util.CommonUtil;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.dms.web.services.MetadataService;
 import com.github.dapeng.dms.web.util.MockException;
 import com.github.dapeng.dms.web.vo.UploadResp;
-import com.github.dapeng.json.OptimizedMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-import scala.Tuple2;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
@@ -33,8 +28,11 @@ import java.util.Map;
 @RequestMapping("/admin")
 public class UploadController {
 
-    @Value("${dms.thrift.baseDir}")
-    private String thriftBaseDir;
+    /**
+     * 可能为 thrift 也可能为 xml，基于用户存储什么样的类型。
+     */
+    @Value("${dms.first.baseDir}")
+    private String firstInDir;
 
     @Value("${dms.resource.baseDir}")
     private String xmlResourceBaseDir;
@@ -48,10 +46,9 @@ public class UploadController {
 
     @PostConstruct
     public void init() {
-        log.info("======================    DMS thrift base dir: {}     ======================", thriftBaseDir);
+        log.info("======================    DMS thrift base dir: {}     ======================", firstInDir);
         log.info("======================    DMS xml resource base dir: {}   ======================", xmlResourceBaseDir);
     }
-
 
     /**
      * 上传文件
@@ -77,7 +74,7 @@ public class UploadController {
                 throw new MockException("上传文件的文件名称不能为空");
             }
             // 文件上传后的路径
-            String filePath = thriftBaseDir + data + "/" + fileName;
+            String filePath = firstInDir + data + "/" + fileName;
             File dest = new File(filePath);
             // 检测是否存在目录
             if (!dest.getParentFile().exists()) {
@@ -93,18 +90,64 @@ public class UploadController {
     }
 
     @ResponseBody
-    @RequestMapping("/thriftGenerator")
-    public List<Service> thriftGenerator(String tag) {
+    @PostMapping("/resourceGenerator")
+    public Object thriftGenerator(Map<String, String> params) {
         try {
-            return metadataService.parseMetadata(thriftBaseDir, xmlResourceBaseDir, tag);
+            String tag = CommonUtil.notNullRet(params.get("tag"), "");
+            String fullPath = combinaDir(tag);
+            File targetFolder = new File(fullPath);
+
+            if (!targetFolder.exists()) {
+                log.error("file path [{}] was not exists ", fullPath);
+                throw new MockException("根据[" + fullPath + "]目标路径未找到元数据信息");
+            }
+            File[] files = targetFolder.listFiles();
+            if (files != null && files.length > 0) {
+                Set<String> suffixType = new HashSet<>();
+                for (File file : files) {
+                    String fileName = file.getName();
+                    String suffixName = fileName.substring(fileName.lastIndexOf("."));
+                    suffixType.add(suffixName);
+                }
+
+                if (suffixType.size() > 1) {
+                    throw new MockException("单次上传只能选择一种格式，thrift 或者 xml");
+                }
+
+//                suffixType.forEach(type -> type.);
+
+
+            }
+
+
+           /* if (type.equals("thrift")) {
+                metadataService.processThriftGenerator(firstInDir, xmlResourceBaseDir, tag);
+            } else if (type.equals("xml")) {
+                metadataService.processXmlGenerator(xmlResourceBaseDir, tag);
+            } else {
+                throw new MockException("请指定 type 类型为 thrift 或 xml");
+            }*/
+            return Resp.success();
         } catch (Exception e) {
             log.error(e.getMessage());
-            return null;
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ResponseBody
+    @PostMapping("/xmlGenerator")
+    public Object xmlMetaGenerator(String tag) {
+        try {
+            metadataService.processThriftGenerator(firstInDir, xmlResourceBaseDir, tag);
+            return Resp.success();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
 
 
-    @ResponseBody
+    /*@ResponseBody
     @RequestMapping("/startParse")
     public Object parseMetadata(String dir) {
         try {
@@ -119,7 +162,7 @@ public class UploadController {
             return Resp.error(RespUtil.MOCK_ERROR, "parseMetadata failed: " + e.getMessage());
         }
 
-    }
+    }*/
 
 
     //文件下载相关代码
@@ -236,6 +279,10 @@ public class UploadController {
             }
         }
         return "SUCCESS";
+    }
+
+    private String combinaDir(String childPath) {
+        return firstInDir + childPath;
     }
 
 

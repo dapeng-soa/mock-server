@@ -220,7 +220,7 @@ public class DslMockService implements InitializingBean {
         if (dmsPage != null) {
             serviceQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
-        QueryResults<Mock> results = serviceQuery.orderBy(qMock.id.asc()).fetchResults();
+        QueryResults<Mock> results = serviceQuery.orderBy(qMock.sort.asc()).fetchResults();
 
         log.info("listMockExpress results size: {}", results.getResults().size());
 
@@ -365,7 +365,7 @@ public class DslMockService implements InitializingBean {
         if (dmsPage != null) {
             metaQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
-        QueryResults<Tuple> queryResults = metaQuery.orderBy(qMeta.id.asc()).fetchResults();
+        QueryResults<Tuple> queryResults = metaQuery.orderBy(qMeta.createdAt.desc()).fetchResults();
         List<MetadataVo> metadataVoList = queryResults.getResults().stream().map(t -> {
             Long id = t.get(qMeta.id);
             String simpleName = t.get(qMeta.simpleName);
@@ -423,9 +423,6 @@ public class DslMockService implements InitializingBean {
                 .where(qService.id.eq(request.getId()))
                 .execute();
     }
-
-
-
 
 
 

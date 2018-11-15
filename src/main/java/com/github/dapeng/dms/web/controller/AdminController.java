@@ -2,14 +2,13 @@ package com.github.dapeng.dms.web.controller;
 
 import com.github.dapeng.dms.util.CommonUtil;
 import com.github.dapeng.dms.web.services.DslMockService;
+import com.github.dapeng.dms.web.services.MetadataService;
+import com.github.dapeng.dms.web.services.MockSpringService;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.dms.web.vo.request.*;
-import com.github.dapeng.dms.web.vo.response.MockMethodFormResp;
-import com.github.dapeng.dms.web.vo.response.QueryMetaResp;
-import com.github.dapeng.dms.web.vo.response.QueryMethodResp;
-import com.github.dapeng.dms.web.vo.response.QueryMockResp;
+import com.github.dapeng.dms.web.vo.response.*;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
@@ -33,9 +32,13 @@ public class AdminController {
 
     private final DslMockService dslMockService;
 
-    public AdminController(com.github.dapeng.dms.web.services.MockSpringService mockService, DslMockService dslMockService) {
+    private final MetadataService metadataService;
+
+
+    public AdminController(MockSpringService mockService, DslMockService dslMockService, MetadataService metadataService) {
         this.mockService = mockService;
         this.dslMockService = dslMockService;
+        this.metadataService = metadataService;
     }
 
     @ApiOperation(value = "根据条件 List Service")
@@ -79,6 +82,17 @@ public class AdminController {
         try {
             QueryMetaResp metaResp = dslMockService.queryMetadataByCondition(request);
             return Resp.success(metaResp);
+        } catch (Exception e) {
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "元数据详情之接口方法查询")
+    @PostMapping("/listMetaDetailMethod")
+    public Object queryMetaDetailMethod(@RequestBody QueryMetaMethodReq request) {
+        try {
+            QueryMetaMethodResp metaMethodResp = metadataService.queryMetaDetailMethod(request);
+            return Resp.success(metaMethodResp);
         } catch (Exception e) {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
@@ -247,31 +261,6 @@ public class AdminController {
     public Object updateMockPriority(@RequestBody UpdatePriorityReq request) {
         try {
             dslMockService.updateMockPriority(request);
-            return Resp.success(RespUtil.OK);
-        } catch (Exception e) {
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
-
-    /**
-     * 优先级修改。默认规则是 从下往上进行移动。
-     * a     =>     b
-     * b     =>     a
-     *
-     * @param frontId 要修改的mock id
-     * @param belowId 需要排到某条规则之前的，那条规则的 mock id
-     * @return ResponseEntity
-     */
-    @ApiOperation(value = "修改同一MockKey下的Mock规则优先级", notes = "注意传入两个规则的ID即可，每次只可以修改一个规则的优先级")
-    @ApiImplicitParams({@ApiImplicitParam(name = "frontId", value = "修改的规则需要移动的规则id之上的规则ID", dataType = "String"),
-            @ApiImplicitParam(name = "belowId", value = "需要修改的规则的Id", dataType = "String")
-    })
-
-    @PostMapping("/old/updatePriority")
-    public Object modifyMockPriority(@RequestParam long frontId, @RequestParam long belowId) {
-        try {
-            mockService.modifyMockPriority(frontId, belowId);
             return Resp.success(RespUtil.OK);
         } catch (Exception e) {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());

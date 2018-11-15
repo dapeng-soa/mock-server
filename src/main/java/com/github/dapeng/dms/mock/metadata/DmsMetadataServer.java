@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * @author hz.lei
  * @since 2018年06月21日 下午12:25
  */
-@Component
+//@Component
 @Slf4j
 public class DmsMetadataServer implements InitializingBean {
 
