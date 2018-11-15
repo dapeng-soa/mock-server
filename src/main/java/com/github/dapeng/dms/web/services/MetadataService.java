@@ -5,6 +5,8 @@ import com.github.dapeng.core.metadata.Service;
 import com.github.dapeng.dms.mock.metadata.MetaMemoryCache;
 import com.github.dapeng.dms.mock.metadata.MetaSearcher;
 import com.github.dapeng.dms.thrift.ThriftGenerator;
+import com.github.dapeng.dms.util.CommonUtil;
+import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.QMockMetadata;
 import com.github.dapeng.dms.web.repository.MetadataRepository;
@@ -53,6 +55,34 @@ public class MetadataService implements InitializingBean, ApplicationRunner {
     public void afterPropertiesSet() throws Exception {
         queryDsl = new JPAQueryFactory(entityManager);
         log.info("init JPAQueryFactory successfully");
+    }
+
+    /**
+     * 自动判断解析类型
+     */
+    public String candidateGenerateType(String tag, String fullPath) {
+        File targetFolder = new File(fullPath);
+        if (!targetFolder.exists()) {
+            log.error("file path [{}] was not exists ", fullPath);
+            throw new MockException("根据[" + fullPath + "]目标路径未找到元数据信息");
+        }
+        File[] files = targetFolder.listFiles();
+        if (files != null && files.length > 0) {
+            Set<String> suffixType = new HashSet<>();
+            for (File file : files) {
+                String fileName = file.getName();
+                String suffixName = fileName.substring(fileName.lastIndexOf("."));
+                suffixType.add(suffixName);
+            }
+            if (suffixType.size() == 0) {
+                throw new MockException("上传文件后缀名不能为空.");
+            }
+            if (suffixType.size() > 1) {
+                throw new MockException("单次上传只能选择一种格式，thrift 或者 xml");
+            }
+            return suffixType.iterator().next();
+        }
+        throw new MockException("根据服务Tag:" + tag + " 指定目录下没有可解析文件，请重新上传.");
     }
 
 
@@ -250,5 +280,23 @@ public class MetadataService implements InitializingBean, ApplicationRunner {
             }
         });
         log.info("====================== load existing in db  metadata service end ====================== ");
+    }
+
+
+
+    public boolean deleteTargetFiles(String fullPath) {
+        boolean isDelete = false;
+        File targetFolder = new File(fullPath);
+        if (!targetFolder.exists()) {
+            log.error("file path [{}] was not exists ", fullPath);
+            throw new MockException("根据[" + fullPath + "]目标路径未找到元数据信息");
+        }
+        File[] files = targetFolder.listFiles();
+        if (files != null && files.length > 0) {
+            for (File file : files) {
+                isDelete = file.delete();
+            }
+        }
+        return isDelete;
     }
 }

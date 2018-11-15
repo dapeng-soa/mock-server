@@ -64,29 +64,26 @@ public class UploadController {
     @ResponseBody
     public Object handleUpload(String data, MultipartFile file) {
         try {
-            if (file.isEmpty()) {
-                throw new MockException("上传文件不能为空");
-            }
-            // 获取文件名
-            String fileName = file.getOriginalFilename();
-
-            if (fileName == null) {
-                throw new MockException("上传文件的文件名称不能为空");
-            }
-            // 文件上传后的路径
-            String filePath = firstInDir + data + "/" + fileName;
-            File dest = new File(filePath);
-            // 检测是否存在目录
-            if (!dest.getParentFile().exists()) {
-                dest.getParentFile().mkdirs();
-            }
-            file.transferTo(dest);
-            log.info("上传文件成功，文件名: {},保存路径: {}", fileName, filePath);
-            return Resp.success(new UploadResp(fileName, filePath));
+            List<String> uploadResult = commonUpload(data, file);
+            return Resp.success(new UploadResp(uploadResult));
         } catch (Exception e) {
             log.error("handleUpload Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
+    }
+
+    @RequestMapping("/updateUpload")
+    @ResponseBody
+    public Object handleUpdateUpload(String data, MultipartFile file) {
+        try {
+            List<String> uploadResult = commonUpload(data, file);
+            commonGenerator(data);
+            return Resp.success(new UploadResp(uploadResult));
+        } catch (Exception e) {
+            log.error("handleUpdateUpload Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+
     }
 
     @ResponseBody
@@ -94,40 +91,8 @@ public class UploadController {
     public Object thriftGenerator(Map<String, String> params) {
         try {
             String tag = CommonUtil.notNullRet(params.get("tag"), "");
-            String fullPath = combinaDir(tag);
-            File targetFolder = new File(fullPath);
-
-            if (!targetFolder.exists()) {
-                log.error("file path [{}] was not exists ", fullPath);
-                throw new MockException("根据[" + fullPath + "]目标路径未找到元数据信息");
-            }
-            File[] files = targetFolder.listFiles();
-            if (files != null && files.length > 0) {
-                Set<String> suffixType = new HashSet<>();
-                for (File file : files) {
-                    String fileName = file.getName();
-                    String suffixName = fileName.substring(fileName.lastIndexOf("."));
-                    suffixType.add(suffixName);
-                }
-
-                if (suffixType.size() > 1) {
-                    throw new MockException("单次上传只能选择一种格式，thrift 或者 xml");
-                }
-
-//                suffixType.forEach(type -> type.);
-
-
-            }
-
-
-           /* if (type.equals("thrift")) {
-                metadataService.processThriftGenerator(firstInDir, xmlResourceBaseDir, tag);
-            } else if (type.equals("xml")) {
-                metadataService.processXmlGenerator(xmlResourceBaseDir, tag);
-            } else {
-                throw new MockException("请指定 type 类型为 thrift 或 xml");
-            }*/
-            return Resp.success();
+            boolean isDelete = commonGenerator(tag);
+            return Resp.success(isDelete);
         } catch (Exception e) {
             log.error(e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
@@ -145,6 +110,53 @@ public class UploadController {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
+
+
+    /**
+     * ================================================   commmon method  ================================================
+     */
+
+    private List<String> commonUpload(String data, MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            throw new MockException("上传文件不能为空");
+        }
+        // 获取文件名
+        String fileName = file.getOriginalFilename();
+
+        if (fileName == null) {
+            throw new MockException("上传文件的文件名称不能为空");
+        }
+        // 文件上传后的路径
+        String filePath = firstInDir + data + "/" + fileName;
+        File dest = new File(filePath);
+        // 检测是否存在目录
+        if (!dest.getParentFile().exists()) {
+            dest.getParentFile().mkdirs();
+        }
+        file.transferTo(dest);
+        log.info("上传文件成功，文件名: {},保存路径: {}", fileName, filePath);
+
+        return Arrays.asList(fileName, filePath);
+
+    }
+
+    private boolean commonGenerator(String tag) throws IOException {
+        String fullPath = combinaDir(tag);
+        String type = metadataService.candidateGenerateType(tag, fullPath);
+        switch (type) {
+            case "thrift":
+                metadataService.processThriftGenerator(firstInDir, xmlResourceBaseDir, tag);
+                break;
+            case "xml":
+                metadataService.processXmlGenerator(xmlResourceBaseDir, tag);
+                break;
+            default:
+                throw new MockException("请指定 type 类型为 thrift 或 xml");
+        }
+        return metadataService.deleteTargetFiles(fullPath);
+    }
+
+
 
 
     /*@ResponseBody
