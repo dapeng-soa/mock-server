@@ -3,7 +3,6 @@ package com.github.dapeng.dms.web.controller;
 import com.github.dapeng.dms.util.CommonUtil;
 import com.github.dapeng.dms.web.services.DslMockService;
 import com.github.dapeng.dms.web.services.MetadataService;
-import com.github.dapeng.dms.web.services.MockSpringService;
 import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
@@ -28,15 +27,12 @@ import java.util.Map;
 @Slf4j
 public class AdminController {
 
-    private final com.github.dapeng.dms.web.services.MockSpringService mockService;
-
     private final DslMockService dslMockService;
 
     private final MetadataService metadataService;
 
 
-    public AdminController(MockSpringService mockService, DslMockService dslMockService, MetadataService metadataService) {
-        this.mockService = mockService;
+    public AdminController(DslMockService dslMockService, MetadataService metadataService) {
         this.dslMockService = dslMockService;
         this.metadataService = metadataService;
     }
@@ -266,17 +262,4 @@ public class AdminController {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
-
-    @ApiOperation(value = "修改Mock服务信息", notes = "注意传入MockServiceVo Json形式，ID不要改变")
-    @PostMapping("/modify/mock")
-    public Object updateMock(@RequestBody MockVo mockVo) {
-        try {
-            mockService.updateMock(mockVo);
-            return Resp.success(RespUtil.OK);
-        } catch (Exception e) {
-            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
-        }
-    }
-
-
 }

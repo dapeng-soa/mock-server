@@ -7,19 +7,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @EnableSwagger2Doc
 @SpringBootApplication
 @PropertySource({"classpath:db.properties", "classpath:oss.properties"})
-public class DapengMockServerApplication {
+public class DMSApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DapengMockServerApplication.class, args);
+        SpringApplication.run(DMSApplication.class, args);
     }
 
     @Bean

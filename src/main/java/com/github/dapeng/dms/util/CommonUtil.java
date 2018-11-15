@@ -13,7 +13,7 @@ import java.util.List;
  * @since 2018-11-12 4:06 PM
  */
 public class CommonUtil {
-    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YY-MM-dd HH:mm");
 
     public static <T> void notNull(T req) {
         if (req == null) {
@@ -38,6 +38,14 @@ public class CommonUtil {
         return service + ":" + version;
     }
 
+    public static String combineMeta(String namespace, String name) {
+        return namespace + "." + name;
+    }
+
+
+    public static String convertName(String service) {
+        return service.substring(service.lastIndexOf(".") + 1);
+    }
 
 
     public static String longToStringDate(long timeStamp) {

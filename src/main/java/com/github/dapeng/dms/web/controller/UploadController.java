@@ -34,9 +34,6 @@ public class UploadController {
     @Value("${dms.first.baseDir}")
     private String firstInDir;
 
-    @Value("${dms.resource.baseDir}")
-    private String xmlResourceBaseDir;
-
     private final MetadataService metadataService;
 
     public UploadController(MetadataService metadataService) {
@@ -46,14 +43,12 @@ public class UploadController {
 
     @PostConstruct
     public void init() {
-        log.info("======================    DMS thrift base dir: {}     ======================", firstInDir);
-        log.info("======================    DMS xml resource base dir: {}   ======================", xmlResourceBaseDir);
+        log.info("======================    DMS upload file base dir: {}     ======================", firstInDir);
     }
 
     /**
      * 上传文件
      *
-     * @param data 上传 tag
      * @param file 文件
      *             解决中文问题，liunx下中文路径，图片显示问题
      *             // 获取文件的后缀名
@@ -64,6 +59,7 @@ public class UploadController {
     @ResponseBody
     public Object handleUpload(String data, MultipartFile file) {
         try {
+            log.info("===== upload 生成 file  tag 为 {}  ===== ", data);
             List<String> uploadResult = commonUpload(data, file);
             return Resp.success(new UploadResp(uploadResult));
         } catch (Exception e) {
@@ -72,13 +68,29 @@ public class UploadController {
         }
     }
 
+    @ResponseBody
+    @PostMapping("/resourceGenerator")
+    public Object thriftGenerator(@RequestBody Map<String, String> params) {
+        try {
+            String tag = CommonUtil.notNullRet(params.get("tag"), "服务Tag不能为空");
+            commonGenerator(tag, null);
+            return Resp.success();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    /**
+     * 更新一个微服务
+     */
     @RequestMapping("/updateUpload")
     @ResponseBody
-    public Object handleUpdateUpload(String data, MultipartFile file) {
+    public Object handleUpdateUpload(String serviceName, MultipartFile file) {
         try {
-            List<String> uploadResult = commonUpload(data, file);
-            commonGenerator(data);
-            return Resp.success(new UploadResp(uploadResult));
+            String tag = CommonUtil.convertName(serviceName);
+            commonUpload(tag, file);
+            return Resp.success(serviceName);
         } catch (Exception e) {
             log.error("handleUpdateUpload Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
@@ -86,24 +98,27 @@ public class UploadController {
 
     }
 
+    @RequestMapping("/updateResourceGenerator")
     @ResponseBody
-    @PostMapping("/resourceGenerator")
-    public Object thriftGenerator(Map<String, String> params) {
+    public Object handleUpdateResourceGenerate(@RequestBody Map<String, String> params) {
         try {
-            String tag = CommonUtil.notNullRet(params.get("tag"), "");
-            boolean isDelete = commonGenerator(tag);
-            return Resp.success(isDelete);
+            String serviceName = CommonUtil.notNullRet(params.get("serviceName"), "更新时 serviceName 不能为空.");
+            String tag = CommonUtil.convertName(serviceName);
+            commonGenerator(tag, serviceName);
+            return Resp.success();
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("handleUpdateResourceGenerate Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
+
     }
+
 
     @ResponseBody
     @PostMapping("/xmlGenerator")
     public Object xmlMetaGenerator(String tag) {
         try {
-            metadataService.processThriftGenerator(firstInDir, xmlResourceBaseDir, tag);
+            metadataService.processThriftGenerator(firstInDir, tag, null);
             return Resp.success();
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -117,43 +132,60 @@ public class UploadController {
      */
 
     private List<String> commonUpload(String data, MultipartFile file) throws IOException {
-        if (file.isEmpty()) {
-            throw new MockException("上传文件不能为空");
-        }
-        // 获取文件名
-        String fileName = file.getOriginalFilename();
+        String filePath = null;
+        try {
+            CommonUtil.notNull(data, "上传服务tag不能为空");
+            if (file.isEmpty()) {
+                throw new MockException("上传文件不能为空");
+            }
+            // 获取文件名
+            String fileName = file.getOriginalFilename();
 
-        if (fileName == null) {
-            throw new MockException("上传文件的文件名称不能为空");
-        }
-        // 文件上传后的路径
-        String filePath = firstInDir + data + "/" + fileName;
-        File dest = new File(filePath);
-        // 检测是否存在目录
-        if (!dest.getParentFile().exists()) {
-            dest.getParentFile().mkdirs();
-        }
-        file.transferTo(dest);
-        log.info("上传文件成功，文件名: {},保存路径: {}", fileName, filePath);
+            if (fileName == null) {
+                throw new MockException("上传文件的文件名称不能为空");
+            }
+            // 文件上传后的路径
+            filePath = firstInDir + data + "/" + fileName;
+            File dest = new File(filePath);
+            // 检测是否存在目录
+            if (!dest.getParentFile().exists()) {
+                dest.getParentFile().mkdirs();
+            }
+            file.transferTo(dest);
+            log.info("上传文件成功，文件名: {},保存路径: {}", fileName, filePath);
 
-        return Arrays.asList(fileName, filePath);
-
+            return Arrays.asList(fileName, filePath);
+        } catch (Exception e) {
+            metadataService.deleteTargetFiles(filePath);
+            throw e;
+        }
     }
 
-    private boolean commonGenerator(String tag) throws IOException {
+    /**
+     * 通用解析上传的 xml 或者 thrift 文件 为可用元数据信息
+     *
+     * @param tag           上传 tag
+     * @param serviceFilter 是否根据 service 过滤只跟新指定的服务元数据内容。
+     * @return
+     * @throws IOException file exception
+     */
+    private void commonGenerator(String tag, String serviceFilter) throws IOException {
         String fullPath = combinaDir(tag);
-        String type = metadataService.candidateGenerateType(tag, fullPath);
-        switch (type) {
-            case "thrift":
-                metadataService.processThriftGenerator(firstInDir, xmlResourceBaseDir, tag);
-                break;
-            case "xml":
-                metadataService.processXmlGenerator(xmlResourceBaseDir, tag);
-                break;
-            default:
-                throw new MockException("请指定 type 类型为 thrift 或 xml");
+        try {
+            String type = metadataService.candidateGenerateType(tag, fullPath);
+            switch (type) {
+                case "thrift":
+                    metadataService.processThriftGenerator(firstInDir, tag, serviceFilter);
+                    break;
+                case "xml":
+                    metadataService.processXmlGenerator(firstInDir, tag, serviceFilter);
+                    break;
+                default:
+                    throw new MockException("请指定上传文件类型为 thrift 或 xml");
+            }
+        } finally {
+            metadataService.deleteTargetFiles(fullPath);
         }
-        return metadataService.deleteTargetFiles(fullPath);
     }
 
 

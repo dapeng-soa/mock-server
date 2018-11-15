@@ -14,4 +14,6 @@ public interface Constants {
     String SERVICE_GROUP_DEFAULT = "OtherService";
 
     long DEFAULT_SORT_NUM = 1000L;
+
+    String dictionary[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I"};
 }

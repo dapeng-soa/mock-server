@@ -6,7 +6,6 @@ import com.github.dapeng.dms.mock.metadata.MetaMemoryCache;
 import com.github.dapeng.dms.mock.metadata.MetaSearcher;
 import com.github.dapeng.dms.thrift.ThriftGenerator;
 import com.github.dapeng.dms.util.CommonUtil;
-import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import com.github.dapeng.dms.web.entity.QMockMetadata;
 import com.github.dapeng.dms.web.repository.MetadataRepository;
@@ -71,7 +70,7 @@ public class MetadataService implements InitializingBean, ApplicationRunner {
             Set<String> suffixType = new HashSet<>();
             for (File file : files) {
                 String fileName = file.getName();
-                String suffixName = fileName.substring(fileName.lastIndexOf("."));
+                String suffixName = fileName.substring(fileName.lastIndexOf(".") + 1);
                 suffixType.add(suffixName);
             }
             if (suffixType.size() == 0) {
@@ -90,25 +89,32 @@ public class MetadataService implements InitializingBean, ApplicationRunner {
      * 解析上传的 thrift 文件并
      * 1).生成 xml 存入 数据库。
      * 2).解析 现有服务信息存入 内存。
+     * <p>
+     * filterServiceName 是否过滤
      *
      * @param tag 服务 tag
      */
-    public void processThriftGenerator(String thriftBaseDir, String resourceBaseDir, String tag) {
-        List<Service> serviceList = doThriftGenerator(thriftBaseDir, resourceBaseDir, tag);
+    public void processThriftGenerator(String thriftBaseDir, String tag, String serviceFilter) {
+        List<Service> serviceList = doThriftGenerator(thriftBaseDir, tag);
         if (serviceList != null) {
-            //处理和保存...
+            if (serviceFilter != null) {
+                serviceList = serviceList.stream()
+                        .filter(service -> serviceFilter.equals(CommonUtil.combineMeta(service.namespace, service.name)))
+                        .collect(Collectors.toList());
+            }
             serviceList.forEach(service -> {
+                //保存最新元信息到 DB
                 saveMetaService(service);
+                //保存数据到内存空间.每次重启会重新加载.
                 cachedMetaService(service);
             });
         }
     }
 
-    private List<Service> doThriftGenerator(String thriftBaseDir, String resourceBaseDir, String tag) {
+    private List<Service> doThriftGenerator(String thriftBaseDir, String tag) {
         try {
             String thriftDir = thriftBaseDir + tag;
-            String resourceDir = resourceBaseDir + tag;
-            Tuple2<List<com.github.dapeng.core.metadata.Service>, String[]> generateFiles = ThriftGenerator.generateFiles(thriftDir, resourceDir);
+            Tuple2<List<com.github.dapeng.core.metadata.Service>, String[]> generateFiles = ThriftGenerator.generateFiles(thriftDir, thriftDir);
             log.info("解析 thrift 成功, generateFiles: {} ,{}", generateFiles._1, generateFiles._2);
             return generateFiles._1;
         } catch (Exception e) {
@@ -124,14 +130,22 @@ public class MetadataService implements InitializingBean, ApplicationRunner {
      *
      * @param tag 服务 tag
      */
-    public void processXmlGenerator(String resourcesDir, String tag) throws IOException {
+    public void processXmlGenerator(String resourcesDir, String tag, String serviceFilter) throws IOException {
         String targetDir = resourcesDir + tag;
         List<String> xmlStringList = loadXmlReSourcesFromDist(targetDir);
+
         xmlStringList.forEach(str -> {
             Service service = unmarshalMetadataFromStream(str);
             if (service != null) {
-                saveMetaService(service);
-                cachedMetaService(service);
+                if (serviceFilter != null) {
+                    if (serviceFilter.equals(CommonUtil.combineMeta(service.namespace, service.name))) {
+                        saveMetaService(service);
+                        cachedMetaService(service);
+                    }
+                } else {
+                    saveMetaService(service);
+                    cachedMetaService(service);
+                }
             }
         });
     }
@@ -283,20 +297,29 @@ public class MetadataService implements InitializingBean, ApplicationRunner {
     }
 
 
-
     public boolean deleteTargetFiles(String fullPath) {
         boolean isDelete = false;
-        File targetFolder = new File(fullPath);
-        if (!targetFolder.exists()) {
+        File targetFile = new File(fullPath);
+        if (!targetFile.exists()) {
             log.error("file path [{}] was not exists ", fullPath);
             throw new MockException("根据[" + fullPath + "]目标路径未找到元数据信息");
         }
-        File[] files = targetFolder.listFiles();
+        if (targetFile.isFile()) {
+            File parentFile = targetFile.getParentFile();
+            return deleteDirFiles(parentFile);
+        }
+        return deleteDirFiles(targetFile);
+    }
+
+    private boolean deleteDirFiles(File parentFile) {
+        boolean isDelete = false;
+        File[] files = parentFile.listFiles();
         if (files != null && files.length > 0) {
             for (File file : files) {
                 isDelete = file.delete();
             }
         }
+        isDelete = parentFile.delete();
         return isDelete;
     }
 }

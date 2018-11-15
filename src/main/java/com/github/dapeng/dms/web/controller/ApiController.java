@@ -1,7 +1,7 @@
 package com.github.dapeng.dms.web.controller;
 
 import com.github.dapeng.dms.mock.metadata.MetadataUtils;
-import com.github.dapeng.dms.web.services.MockSpringService;
+import com.github.dapeng.dms.web.services.ApiService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +21,10 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 public class ApiController {
 
-    private final MockSpringService mockService;
+    private final ApiService apiService;
 
-    public ApiController(MockSpringService mockService) {
-        this.mockService = mockService;
+    public ApiController(ApiService apiService) {
+        this.apiService = apiService;
     }
 
     /**
@@ -88,7 +88,7 @@ public class ApiController {
     private String processRequest(String serviceName, String version, String methodName,
                                   String parameter, HttpServletRequest request) {
         //1.mock
-        String mockJsonResp = mockService.mock(serviceName, version, methodName, parameter, request);
+        String mockJsonResp = apiService.doMock(serviceName, version, methodName, parameter, request);
         if (mockJsonResp != null) {
             return mockJsonResp;
         }
