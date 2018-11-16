@@ -52,8 +52,9 @@ public class AdminController {
 
     @ApiOperation(value = "获取已存在的所有服务全称")
     @PostMapping("/listServicesName")
-    public Object listMockServiceName(Long id) {
+    public Object listMockServiceName(@RequestBody Map<String, Long> params) {
         try {
+            Long id = params.get("id");
             List<String> serviceNameList = dslMockService.listMockServiceName(id);
             return Resp.success(serviceNameList);
         } catch (Exception e) {
@@ -108,11 +109,13 @@ public class AdminController {
         }
     }
 
+
     /**
-     * create
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     * create                                注意唯一性校验
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      */
     @ApiOperation(value = "添加一个Mock基础服务")
-    @ApiResponse(code = 200, message = "返回添加成功后的MockServiceVo对象")
     @PostMapping("/createService")
     public Object createService(@RequestBody CreateServiceReq request) {
         try {
@@ -138,14 +141,13 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "添加某一个方法的mock规则", notes = "注意要精确到一个方法然后进行添加")
+    @ApiOperation(value = "添加某一个方法的mock规则")
     @PostMapping("/createMockInfo")
     public Object createMockInfo(@RequestBody CreateMockReq request) {
         try {
             dslMockService.createMockInfo(request);
-//            mockService.addMockInfo(service, method, version, mockExpress, mockData);
             return Resp.success(RespUtil.OK);
-        } catch (JSONException e) {
+        } catch (Exception e) {
             log.error("createMockInfo: Json Schema 解析失败，请检查格式: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }

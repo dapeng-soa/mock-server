@@ -35,12 +35,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
@@ -56,6 +51,10 @@ import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
 @Slf4j
 @Transactional
 public class DslMockService implements InitializingBean {
+    private static final QMock qMock = QMock.mock;
+    private static final QMockService qService = QMockService.mockService;
+    private static final QMockMethod qMethod = QMockMethod.mockMethod;
+
 
     private final MockServiceRepository serviceRepository;
     private final MockMethodRepository methodRepository;
@@ -128,6 +127,7 @@ public class DslMockService implements InitializingBean {
     public List<String> listMockServiceName(Long id) {
         QMockService qService = QMockService.mockService;
         if (id != null) {
+            log.info("请求listMockServiceName id:{}", id);
             return queryDsl.select(qService.serviceName).from(qService).where(qService.id.eq(id)).fetch();
         }
         return queryDsl.select(qService.serviceName).from(qService).fetch();
@@ -159,10 +159,13 @@ public class DslMockService implements InitializingBean {
         QueryResults<MockMethod> results = serviceQuery.orderBy(qMethod.id.asc()).fetchResults();
         log.info("MockMethod results size: {}", results.getResults().size());
 
-        List<MockMethodVo> mockMethodVoList = results.getResults().stream()
-                .map(m -> new MockMethodVo(m.getId(), m.getService(), m.getMethod(), m.getRequestType(), m.getUrl()))
-                .collect(Collectors.toList());
 
+        List<MockMethodVo> mockMethodVoList = results.getResults().stream()
+                .map(m -> {
+                    long mockSize = queryDsl.selectFrom(qMock).where(qMock.methodId.eq(m.getId())).fetchCount();
+                    return new MockMethodVo(m.getId(), m.getService(), m.getMethod(), m.getRequestType(), m.getUrl(), mockSize);
+                })
+                .collect(Collectors.toList());
         if (dmsPage != null) {
             DmsPageResp dmsPageResp = new DmsPageResp(dmsPage.getStart(), dmsPage.getLimit(), results.getTotal());
             return new QueryMethodResp(mockMethodVoList, dmsPageResp);
@@ -192,7 +195,15 @@ public class DslMockService implements InitializingBean {
     }
 
     public void createMethod(CreateMethodReq request) {
-        QMockService qService = QMockService.mockService;
+        //是否已存在
+        MockMethod mockMethod = queryDsl.selectFrom(qMethod)
+                .where(qMethod.service.eq(request.getServiceName())
+                        .and(qMethod.method.eq(request.getMethodName())))
+                .fetchFirst();
+
+        if (mockMethod != null) {
+            throw new MockException("当前服务下已创建当前接口，请勿重复创建");
+        }
         MockService mockService = queryDsl.selectFrom(qService).where(qService.serviceName.eq(request.getServiceName())).fetchFirst();
         if (mockService != null) {
             methodRepository.save(
@@ -326,7 +337,7 @@ public class DslMockService implements InitializingBean {
                 mockRepository.save(newMock);
             }
         } else {
-            throw new MockException("不存在或大于1");
+            throw new MockException("指定的接口没有对应的服务信息");
         }
     }
 

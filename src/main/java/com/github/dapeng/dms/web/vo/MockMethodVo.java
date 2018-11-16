@@ -25,15 +25,16 @@ public class MockMethodVo {
 
     private String url;
 
+    private long mockSize;
 
-    public MockMethodVo(long id, String serviceName, String method, String requestType, String url) {
+    public MockMethodVo(long id, String serviceName, String method, String requestType, String url, long mockSize) {
         this.id = id;
         this.simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
         this.serviceName = serviceName;
         this.method = method;
         this.requestType = requestType;
         this.url = url;
-//        this.url = String.format("/api/%s/%s/%s", serviceName, "1.0.0", methodName);
+        this.mockSize = mockSize;
     }
 
 }
