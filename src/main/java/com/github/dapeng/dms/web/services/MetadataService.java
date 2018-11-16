@@ -7,7 +7,9 @@ import com.github.dapeng.dms.mock.metadata.MetaSearcher;
 import com.github.dapeng.dms.thrift.ThriftGenerator;
 import com.github.dapeng.dms.util.CommonUtil;
 import com.github.dapeng.dms.web.entity.MockMetadata;
+import com.github.dapeng.dms.web.entity.MockService;
 import com.github.dapeng.dms.web.entity.QMockMetadata;
+import com.github.dapeng.dms.web.entity.QMockService;
 import com.github.dapeng.dms.web.repository.MetadataRepository;
 import com.github.dapeng.dms.web.util.MockException;
 import com.github.dapeng.dms.web.vo.MetaMethodVo;
@@ -22,11 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.transaction.annotation.Transactional;
 import scala.Tuple2;
 
 import javax.persistence.EntityManager;
 import javax.xml.bind.JAXB;
 import java.io.*;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,6 +40,7 @@ import java.util.stream.Collectors;
  */
 @org.springframework.stereotype.Service
 @Slf4j
+@Transactional(rollbackFor = Throwable.class)
 public class MetadataService implements InitializingBean, ApplicationRunner {
 
 
@@ -163,19 +168,30 @@ public class MetadataService implements InitializingBean, ApplicationRunner {
         StringWriter metadata = new StringWriter();
         JAXB.marshal(service, metadata);
         QMockMetadata qMeta = QMockMetadata.mockMetadata;
+
+
+        MockMetadata storedMeta;
         MockMetadata oldMeta = queryDsl.selectFrom(qMeta).where(qMeta.serviceName.eq(serviceName).and(qMeta.version.eq(version))).fetchFirst();
         if (oldMeta != null) {
-            metaRepository.delete(oldMeta);
+            oldMeta.setSimpleName(simpleName);
+            oldMeta.setServiceName(serviceName);
+            oldMeta.setVersion(version);
+            oldMeta.setMetadata(metadata.toString());
+            oldMeta.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+            oldMeta.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+            storedMeta = metaRepository.save(oldMeta);
+        } else {
+            //保存元数据信息
+            storedMeta = metaRepository.save(new MockMetadata(simpleName, serviceName, version, metadata.toString()));
         }
-        //保存元数据信息
-        metaRepository.save(new MockMetadata(simpleName, serviceName, version, metadata.toString()));
-
+        //关联 mockData
+        associateMockService(serviceName, version, storedMeta.getId());
     }
 
     /**
      * 将 metadata 信息放入内存缓存.
      */
-    public void cachedMetaService(Service service) {
+    private void cachedMetaService(Service service) {
         //etc. 服务简名key ==> OrderService:1.0.0
         String simpleKey = String.format("%s:%s", service.name, service.getMeta().version);
         //etc. 服务全名key ==> com.today.api.order.service.OrderService:1.0.0
@@ -186,6 +202,14 @@ public class MetadataService implements InitializingBean, ApplicationRunner {
         MetaMemoryCache.getSimpleServiceMap().put(simpleKey, optimizedService);
         MetaMemoryCache.getFullServiceMap().put(fullKey, optimizedService);
         log.info("存储服务 {} 元信息缓存成功,目前已存在的元数据数量：{}", service.getName(), MetaMemoryCache.getSimpleServiceMap().size());
+    }
+
+    private void associateMockService(String serviceName, String version, long id) {
+        QMockService qService = QMockService.mockService;
+        MockService mockService = queryDsl.selectFrom(qService).where(qService.serviceName.eq(serviceName).and(qService.version.eq(version))).fetchFirst();
+        if (mockService != null) {
+            queryDsl.update(qService).set(qService.metadataId, id).where(qService.id.eq(mockService.getId())).execute();
+        }
     }
 
 

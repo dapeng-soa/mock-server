@@ -3,7 +3,6 @@ package com.github.dapeng.dms.web.controller;
 import com.github.dapeng.dms.util.CommonUtil;
 import com.github.dapeng.dms.web.services.DslMockService;
 import com.github.dapeng.dms.web.services.MetadataService;
-import com.github.dapeng.dms.web.vo.MockVo;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.dms.web.vo.request.*;
@@ -13,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,17 +31,31 @@ public class AdminController {
 
     private final MetadataService metadataService;
 
-
+    /**
+     * Spring Dependency Injection for Construction
+     */
     public AdminController(DslMockService dslMockService, MetadataService metadataService) {
         this.dslMockService = dslMockService;
         this.metadataService = metadataService;
     }
+
 
     @ApiOperation(value = "根据条件 List Service")
     @PostMapping("/listServices")
     public Object listMockService(@RequestBody QueryServiceReq requestVo) {
         try {
             return dslMockService.queryServiceByCondition(requestVo);
+        } catch (Exception e) {
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "获取已存在的所有服务全称")
+    @PostMapping("/listServicesName")
+    public Object listMockServiceName(Long id) {
+        try {
+            List<String> serviceNameList = dslMockService.listMockServiceName(id);
+            return Resp.success(serviceNameList);
         } catch (Exception e) {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }

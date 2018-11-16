@@ -101,16 +101,16 @@ public class DslMockService implements InitializingBean {
         if (dmsPage != null) {
             serviceQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
-        QueryResults<MockService> results = serviceQuery.orderBy(qService.id.asc()).fetchResults();
+        QueryResults<MockService> results = serviceQuery.orderBy(qService.createdAt.desc()).fetchResults();
 
         // fetch data
-        List<MockServiceVo> mockServiceVoList = results.getResults().stream().map(serviceInfo -> {
-
-            long count = queryMockMethodCount(serviceInfo.getId());
-            String serviceName = serviceInfo.getServiceName();
+        List<MockServiceVo> mockServiceVoList = results.getResults().stream().map(info -> {
+            long count = queryMockMethodCount(info.getId());
+            String serviceName = info.getServiceName();
             String simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
-            return new MockServiceVo(serviceInfo.getId(), serviceInfo.getServiceName(),
-                    simpleService, serviceInfo.getVersion(), null, count);
+
+            return new MockServiceVo(info.getId(), info.getServiceName(), simpleService,
+                    info.getVersion(), info.getMetadataId(), count, info.getCreatedAt());
         }).collect(Collectors.toList());
 
         if (dmsPage != null) {
@@ -118,6 +118,19 @@ public class DslMockService implements InitializingBean {
             return Resp.success(new ListServiceResp(mockServiceVoList, dmsPageResp));
         }
         return Resp.success(new ListServiceResp(mockServiceVoList));
+    }
+
+    /**
+     * 获取所有服务全称
+     *
+     * @return
+     */
+    public List<String> listMockServiceName(Long id) {
+        QMockService qService = QMockService.mockService;
+        if (id != null) {
+            return queryDsl.select(qService.serviceName).from(qService).where(qService.id.eq(id)).fetch();
+        }
+        return queryDsl.select(qService.serviceName).from(qService).fetch();
     }
 
 
@@ -179,12 +192,18 @@ public class DslMockService implements InitializingBean {
     }
 
     public void createMethod(CreateMethodReq request) {
-        methodRepository.save(
-                new MockMethod(request.getServiceName(),
-                        request.getMethodName(),
-                        request.getRequestType(),
-                        request.getUrl(),
-                        new Timestamp(System.currentTimeMillis())));
+        QMockService qService = QMockService.mockService;
+        MockService mockService = queryDsl.selectFrom(qService).where(qService.serviceName.eq(request.getServiceName())).fetchFirst();
+        if (mockService != null) {
+            methodRepository.save(
+                    new MockMethod(mockService.getId(), request.getServiceName(),
+                            request.getMethodName(),
+                            request.getRequestType(),
+                            request.getUrl(),
+                            new Timestamp(System.currentTimeMillis())));
+        } else {
+            throw new MockException("新增接口没有已对应的服务，请先创建Mock服务...");
+        }
     }
 
     public void updateMethod(UpdateMethodReq request) {
@@ -248,10 +267,11 @@ public class DslMockService implements InitializingBean {
     }
 
     /**
-     * 创建 mock 基础服务
+     * 创建 mock 基础服务,并关联已有元数据服务.
      */
     public void createService(CreateServiceReq request) {
         QMockService qService = QMockService.mockService;
+        QMockMetadata qMetadata = QMockMetadata.mockMetadata;
         MockService mockService = queryDsl
                 .selectFrom(qService)
                 .where(qService.serviceName.eq(request.getService())
@@ -260,11 +280,14 @@ public class DslMockService implements InitializingBean {
         if (mockService != null) {
             throw new MockException("新增的服务已存在,请勿重复创建相同名称的服务");
         }
+        Long metadataId = queryDsl.select(qMetadata.id).from(qMetadata).where(qMetadata.serviceName.eq(request.getService())).fetchFirst();
+        if (metadataId == null) metadataId = 0L;
+
         MockService service;
         if (request.getSimpleName() != null) {
-            service = new MockService(request.getSimpleName(), request.getService(), request.getVersion());
+            service = new MockService(request.getSimpleName(), request.getService(), request.getVersion(), metadataId);
         } else {
-            service = new MockService(request.getService(), request.getVersion());
+            service = new MockService(request.getService(), request.getVersion(), metadataId);
         }
         serviceRepository.save(service);
     }
@@ -416,13 +439,28 @@ public class DslMockService implements InitializingBean {
 
     public void updateService(UpdateServiceReq request) {
         QMockService qService = QMockService.mockService;
-        queryDsl.update(qService)
-                .set(qService.simpleName, request.getSimpleName())
-                .set(qService.serviceName, request.getServiceName())
-                .set(qService.version, request.getVersion())
-                .where(qService.id.eq(request.getId()))
-                .execute();
+        QMockMetadata qMeta = QMockMetadata.mockMetadata;
+
+        MockService existedService = queryDsl.selectFrom(qService).where(qService.id.eq(request.getId())).fetchFirst();
+        if (existedService != null) {
+            existedService.setSimpleName(request.getSimpleName());
+            existedService.setServiceName(request.getServiceName());
+            existedService.setVersion(request.getVersion());
+
+            if (existedService.getMetadataId() != 0L) {
+                MockMetadata existMeta = queryDsl.selectFrom(qMeta)
+                        .where(qMeta.serviceName.eq(request.getServiceName())
+                                .and(qMeta.version.eq(request.getVersion()))).fetchFirst();
+                if (existMeta != null) {
+                    existedService.setMetadataId(existMeta.getId());
+                } else {
+                    existedService.setMetadataId(0L);
+                }
+            }
+            serviceRepository.save(existedService);
+        }
     }
+
 
 
 

@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
  * @since 2018-11-01 11:25 AM
  */
-@Configuration
+//@Configuration
 public class WebMvcAdapter implements WebMvcConfigurer {
 
     @Override

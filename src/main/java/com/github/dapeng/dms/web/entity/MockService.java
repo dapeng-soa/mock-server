@@ -36,19 +36,21 @@ public class MockService {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
-    public MockService(String serviceName, String version) {
+    public MockService(String serviceName, String version, long metadataId) {
         this.serviceName = serviceName;
         this.version = version;
         this.simpleName = this.serviceName.substring(this.serviceName.lastIndexOf(".") + 1);
         this.createdAt = new Timestamp(System.currentTimeMillis());
+        this.metadataId = metadataId;
 
     }
 
-    public MockService(String simpleName, String serviceName, String version) {
+    public MockService(String simpleName, String serviceName, String version, long metadataId) {
         this.simpleName = simpleName;
         this.serviceName = serviceName;
         this.version = version;
         this.createdAt = new Timestamp(System.currentTimeMillis());
+        this.metadataId = metadataId;
     }
 
 

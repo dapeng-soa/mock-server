@@ -39,7 +39,8 @@ public class MockMethod {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
-    public MockMethod(String service, String method, String requestType, String url, Timestamp createdAt) {
+    public MockMethod(long serviceId, String service, String method, String requestType, String url, Timestamp createdAt) {
+        this.serviceId = serviceId;
         this.service = service;
         this.method = method;
         this.requestType = requestType;

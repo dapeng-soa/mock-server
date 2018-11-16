@@ -1,8 +1,10 @@
 package com.github.dapeng.dms.web.vo;
 
+import com.github.dapeng.dms.util.CommonUtil;
 import com.github.dapeng.dms.web.entity.MockMetadata;
 import lombok.Data;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -20,9 +22,11 @@ public class MockServiceVo {
 
     private String version;
 
-    private List<MockMetadata> metadata;
+    private long metadataId;
 
     private long mockMethodSize;
+
+    private String createAt;
 
     public MockServiceVo(long serviceId, String service) {
         this.serviceId = serviceId;
@@ -39,12 +43,13 @@ public class MockServiceVo {
     }
 
     public MockServiceVo(long serviceId, String service, String simpleName, String version,
-                         List<MockMetadata> metadata, long mockMethodSize) {
+                         long metadataId, long mockMethodSize, Timestamp createAt) {
         this.serviceId = serviceId;
         this.service = service;
         this.simpleName = simpleName;
         this.version = version;
-        this.metadata = metadata;
+        this.metadataId = metadataId;
         this.mockMethodSize = mockMethodSize;
+        this.createAt = CommonUtil.longToStringDate(createAt.getTime());
     }
 }

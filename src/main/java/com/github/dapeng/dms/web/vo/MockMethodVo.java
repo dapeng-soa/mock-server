@@ -17,15 +17,19 @@ public class MockMethodVo {
 
     private String simpleService;
 
+    private String serviceName;
+
     private String method;
 
     private String requestType;
 
     private String url;
 
-    public MockMethodVo(long id, String simpleService, String method, String requestType, String url) {
+
+    public MockMethodVo(long id, String serviceName, String method, String requestType, String url) {
         this.id = id;
-        this.simpleService = simpleService.substring(simpleService.lastIndexOf(".") + 1);
+        this.simpleService = serviceName.substring(serviceName.lastIndexOf(".") + 1);
+        this.serviceName = serviceName;
         this.method = method;
         this.requestType = requestType;
         this.url = url;
