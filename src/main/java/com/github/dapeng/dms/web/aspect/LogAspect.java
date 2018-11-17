@@ -1,14 +1,12 @@
 package com.github.dapeng.dms.web.aspect;
 
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -31,8 +29,11 @@ public class LogAspect {
     @Around(value = "logPointCut()")
     public Object around(ProceedingJoinPoint pjp) throws Throwable {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attributes.getRequest();
-        String requestUrl = request.getRequestURI();
+        String requestUrl = "";
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
+            requestUrl = request.getRequestURI();
+        }
         Signature signature = pjp.getSignature();
         String name = signature.getName();
         String className = signature.getDeclaringType().getSimpleName();

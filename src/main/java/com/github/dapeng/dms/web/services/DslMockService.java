@@ -30,7 +30,6 @@ import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -51,9 +50,6 @@ import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
 @Slf4j
 @Transactional
 public class DslMockService implements InitializingBean {
-    private static final QMock qMock = QMock.mock;
-    private static final QMockService qService = QMockService.mockService;
-    private static final QMockMethod qMethod = QMockMethod.mockMethod;
 
 
     private final MockServiceRepository serviceRepository;
@@ -64,6 +60,11 @@ public class DslMockService implements InitializingBean {
     //JPA查询工厂
     private JPAQueryFactory queryDsl;
 
+    private static final QMockService qService = QMockService.mockService;
+    private static final QMockMethod qMethod = QMockMethod.mockMethod;
+    private static final QMock qMock = QMock.mock;
+    private static final QMockMetadata qMetadata = QMockMetadata.mockMetadata;
+
     public DslMockService(MockServiceRepository serviceRepository, MockMethodRepository methodRepository, MockRepository mockRepository, EntityManager entityManager) {
         this.serviceRepository = serviceRepository;
         this.methodRepository = methodRepository;
@@ -71,19 +72,19 @@ public class DslMockService implements InitializingBean {
         this.entityManager = entityManager;
     }
 
+
     @Override
     public void afterPropertiesSet() throws Exception {
         queryDsl = new JPAQueryFactory(entityManager);
         log.info("init JPAQueryFactory successfully");
     }
 
+
     /**
      * 查询全部数据并根据id倒序
      */
     public Resp queryServiceByCondition(QueryServiceReq request) {
         DmsPageReq dmsPage = request.getPageRequest();
-        //使用 queryDsl 查询
-        QMockService qService = QMockService.mockService;
         //查询并返回结果集
         JPAQuery<MockService> serviceQuery = queryDsl.selectFrom(qService);
 
@@ -125,7 +126,6 @@ public class DslMockService implements InitializingBean {
      * @return
      */
     public List<String> listMockServiceName(Long id) {
-        QMockService qService = QMockService.mockService;
         if (id != null) {
             log.info("请求listMockServiceName id:{}", id);
             return queryDsl.select(qService.serviceName).from(qService).where(qService.id.eq(id)).fetch();
@@ -139,10 +139,7 @@ public class DslMockService implements InitializingBean {
      */
     public QueryMethodResp queryMethodByCondition(QueryMethodReq request) {
         DmsPageReq dmsPage = request.getPageRequest();
-
-        QMockMethod qMethod = QMockMethod.mockMethod;
         JPAQuery<MockMethod> serviceQuery = queryDsl.selectFrom(qMethod);
-
         if (request.getServiceId() != null) {
             serviceQuery.where(qMethod.serviceId.eq(request.getServiceId()));
         } else {
@@ -158,7 +155,6 @@ public class DslMockService implements InitializingBean {
         }
         QueryResults<MockMethod> results = serviceQuery.orderBy(qMethod.id.asc()).fetchResults();
         log.info("MockMethod results size: {}", results.getResults().size());
-
 
         List<MockMethodVo> mockMethodVoList = results.getResults().stream()
                 .map(m -> {
@@ -177,7 +173,6 @@ public class DslMockService implements InitializingBean {
      * count
      */
     private long queryMockMethodCount(long serviceId) {
-        QMockMethod qMethod = QMockMethod.mockMethod;
         return queryDsl
                 .selectFrom(qMethod)
                 .where(qMethod.serviceId.eq(serviceId))
@@ -185,7 +180,6 @@ public class DslMockService implements InitializingBean {
     }
 
     public Object queryMetadataById(String service) {
-        QMockMetadata qMetadata = QMockMetadata.mockMetadata;
         List<MockMetadata> metadataList = queryDsl
                 .selectFrom(qMetadata)
                 .where(qMetadata.serviceName.eq(service))
@@ -218,7 +212,6 @@ public class DslMockService implements InitializingBean {
     }
 
     public void updateMethod(UpdateMethodReq request) {
-        QMockMethod qMethod = QMockMethod.mockMethod;
         queryDsl.update(qMethod)
                 .set(qMethod.service, request.getServiceName())
                 .set(qMethod.method, request.getMethodName())
@@ -229,7 +222,6 @@ public class DslMockService implements InitializingBean {
     }
 
     public void deleteMethod(Long id) {
-        QMockMethod qMethod = QMockMethod.mockMethod;
         long count = queryDsl.selectFrom(qMethod).where(qMethod.id.eq(id)).fetchCount();
         if (count == 0) {
             throw new MockException("该Mock规则记录不存在");
@@ -243,7 +235,6 @@ public class DslMockService implements InitializingBean {
      */
     public QueryMockResp listMockExpress(QueryMockReq request) {
         DmsPageReq dmsPage = request.getPageRequest();
-        QMock qMock = QMock.mock;
         JPAQuery<Mock> serviceQuery = queryDsl.selectFrom(qMock);
         serviceQuery.where(qMock.methodId.eq(request.getMethodId()));
 
@@ -270,7 +261,6 @@ public class DslMockService implements InitializingBean {
      * 根据methodId查询 service and method name
      */
     public MockMethodFormResp getMockMethodForm(Long id) {
-        QMockMethod qMethod = QMockMethod.mockMethod;
         return queryDsl.select(Projections.bean(MockMethodFormResp.class, qMethod.service, qMethod.method))
                 .from(qMethod)
                 .where(qMethod.id.eq(id)).fetchFirst();
@@ -281,8 +271,6 @@ public class DslMockService implements InitializingBean {
      * 创建 mock 基础服务,并关联已有元数据服务.
      */
     public void createService(CreateServiceReq request) {
-        QMockService qService = QMockService.mockService;
-        QMockMetadata qMetadata = QMockMetadata.mockMetadata;
         MockService mockService = queryDsl
                 .selectFrom(qService)
                 .where(qService.serviceName.eq(request.getService())
@@ -311,9 +299,6 @@ public class DslMockService implements InitializingBean {
         JsonSchemaValidator.matcher(request.getMockData());
         //convert
         String mockCompileJson = MockUtils.convertJsonValueToPatternJson(request.getMockExpress());
-
-        QMockService qService = QMockService.mockService;
-        QMockMethod qMethod = QMockMethod.mockMethod;
 
         List<MockDto> mockDtoList = queryDsl.select(Projections.bean(MockDto.class, qService.serviceName.as("service"), qMethod.method,
                 qService.version, qMethod.requestType, qMethod.id.as("methodId"))).from(qService)
@@ -345,7 +330,6 @@ public class DslMockService implements InitializingBean {
      * update mock info
      */
     public void updateMockInfo(UpdateMockReq request) {
-        QMock qMock = QMock.mock;
         JPAUpdateClause mockUpdate = queryDsl.update(qMock);
         if (request.getMockExpress() != null) {
             mockUpdate.set(qMock.mockExpress, request.getMockExpress());
@@ -360,12 +344,10 @@ public class DslMockService implements InitializingBean {
      * 删除服务
      */
     public void deleteService(Long id) {
-        QMockService qService = QMockService.mockService;
         queryDsl.delete(qService).where(qService.id.eq(id)).execute();
     }
 
     public void deleteMockInfo(Long id) {
-        QMock qMock = QMock.mock;
         long executeId = queryDsl.delete(qMock).where(qMock.id.eq(id)).execute();
         if (executeId != 1) {
             throw new MockException("根据Id删除Mock规则异常,可能数据并不存在");
@@ -374,40 +356,39 @@ public class DslMockService implements InitializingBean {
 
     public QueryMetaResp queryMetadataByCondition(QueryMetaReq request) {
         DmsPageReq dmsPage = request.getPageRequest();
-        QMockMetadata qMeta = QMockMetadata.mockMetadata;
         //不查 metadata，提升效率
         JPAQuery<Tuple> metaQuery = queryDsl.select(
-                qMeta.id,
-                qMeta.simpleName,
-                qMeta.serviceName,
-                qMeta.version,
-                qMeta.type,
-                qMeta.createdAt,
-                qMeta.updatedAt
-        ).from(qMeta);
+                qMetadata.id,
+                qMetadata.simpleName,
+                qMetadata.serviceName,
+                qMetadata.version,
+                qMetadata.type,
+                qMetadata.createdAt,
+                qMetadata.updatedAt
+        ).from(qMetadata);
 
         if (request.getMetadataId() != null) {
-            metaQuery.where(qMeta.id.eq(request.getMetadataId()));
+            metaQuery.where(qMetadata.id.eq(request.getMetadataId()));
         } else {
             if (request.getServiceName() != null) {
-                metaQuery.where(qMeta.serviceName.like("%" + request.getServiceName() + "%"));
+                metaQuery.where(qMetadata.serviceName.like("%" + request.getServiceName() + "%"));
             }
             if (request.getVersion() != null) {
-                metaQuery.where(qMeta.version.eq(request.getVersion()));
+                metaQuery.where(qMetadata.version.eq(request.getVersion()));
             }
         }
         if (dmsPage != null) {
             metaQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
-        QueryResults<Tuple> queryResults = metaQuery.orderBy(qMeta.createdAt.desc()).fetchResults();
+        QueryResults<Tuple> queryResults = metaQuery.orderBy(qMetadata.createdAt.desc()).fetchResults();
         List<MetadataVo> metadataVoList = queryResults.getResults().stream().map(t -> {
-            Long id = t.get(qMeta.id);
-            String simpleName = t.get(qMeta.simpleName);
-            String serviceName = t.get(qMeta.serviceName);
-            String version = t.get(qMeta.version);
-            int type = t.get(qMeta.type);
-            Timestamp createdAt = t.get(qMeta.createdAt);
-            Timestamp updatedAt = t.get(qMeta.updatedAt);
+            Long id = t.get(qMetadata.id);
+            String simpleName = t.get(qMetadata.simpleName);
+            String serviceName = t.get(qMetadata.serviceName);
+            String version = t.get(qMetadata.version);
+            int type = t.get(qMetadata.type);
+            Timestamp createdAt = t.get(qMetadata.createdAt);
+            Timestamp updatedAt = t.get(qMetadata.updatedAt);
             String metaKey = CommonUtil.combine(serviceName, version);
             OptimizedMetadata.OptimizedService optimizedService = MetaMemoryCache.getFullServiceMap().get(metaKey);
             int methodSize = 0;
@@ -441,7 +422,6 @@ public class DslMockService implements InitializingBean {
 
     public void updateMockPriority(UpdatePriorityReq request) {
         long begin = 1000L;
-        QMock qMock = QMock.mock;
         List<Long> priorityList = request.getPriorityList();
         for (Long value : priorityList) {
             queryDsl.update(qMock).set(qMock.sort, begin++).where(qMock.id.eq(value)).execute();
@@ -449,9 +429,6 @@ public class DslMockService implements InitializingBean {
     }
 
     public void updateService(UpdateServiceReq request) {
-        QMockService qService = QMockService.mockService;
-        QMockMetadata qMeta = QMockMetadata.mockMetadata;
-
         MockService existedService = queryDsl.selectFrom(qService).where(qService.id.eq(request.getId())).fetchFirst();
         if (existedService != null) {
             existedService.setSimpleName(request.getSimpleName());
@@ -459,9 +436,9 @@ public class DslMockService implements InitializingBean {
             existedService.setVersion(request.getVersion());
 
             if (existedService.getMetadataId() != 0L) {
-                MockMetadata existMeta = queryDsl.selectFrom(qMeta)
-                        .where(qMeta.serviceName.eq(request.getServiceName())
-                                .and(qMeta.version.eq(request.getVersion()))).fetchFirst();
+                MockMetadata existMeta = queryDsl.selectFrom(qMetadata)
+                        .where(qMetadata.serviceName.eq(request.getServiceName())
+                                .and(qMetadata.version.eq(request.getVersion()))).fetchFirst();
                 if (existMeta != null) {
                     existedService.setMetadataId(existMeta.getId());
                 } else {
@@ -471,53 +448,4 @@ public class DslMockService implements InitializingBean {
             serviceRepository.save(existedService);
         }
     }
-
-
-
-
-
-
-
-    /*
-
-    public List<MockService> queryServiceByCondition(QueryServiceReq request) {
-        //使用 querydsl 查询
-        QMockServiceInfo qService = QMockServiceInfo.mockServiceInfo;
-        //查询并返回结果集
-        JPAQuery<MockService> serviceQuery = queryDsl.selectFrom(qService);
-
-        //该Predicate为querydsl下的类,支持嵌套组装复杂查询条件
-//        Predicate predicate = qService.id.longValue().lt(3).and(qService.serviceName.like("shanghai"));
-//分页排序
-        Sort sort = new Sort(new Sort.Order(Sort.Direction.ASC,"id"));
-        PageRequest pageRequest = new PageRequest(0,10,sort);
-        Page<TCity> tCityPage = tCityRepository.findAll(predicate,pageRequest);
-
-
-        if (request.getSimpleName() != null) {
-            serviceQuery.where(qService.serviceName.like(request.getSimpleName()));
-        }
-        if (request.getServiceId() != null) {
-            serviceQuery.where(qService.id.eq(request.getServiceId()));
-        }
-
-
-        if (request.getPageRequest() != null) {
-            //
-            DmsPageReq dmsPageRequest = request.getPageRequest();
-//            Sort sort = new Sort(Sort.Direction.DESC,"createTime"); //创建时间降序排序
-            Pageable pageable = PageRequest.of(dmsPageRequest.getStart(), dmsPageRequest.getLimit());
-            serviceQuery.orderBy(qService.id.desc());
-        }
-        return serviceQuery.fetch();
-    }
-
-
-  Sort sort = Sort.by(Sort.Direction.DESC, dmsPage.getSortFields());
-//                Predicate predicate = qService.id.longValue().lt(3).and(qService.serviceName.like("shanghai"));
-//                serviceQuery.orderBy(new OrderSpecifier<Object>(Order.DESC, dmsPage.getSortFields()));
-                pageRequest = PageRequest.of(dmsPage.getStart(), dmsPage.getLimit(), sort);
-
-     */
-
 }
