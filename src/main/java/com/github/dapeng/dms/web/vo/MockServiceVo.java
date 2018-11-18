@@ -14,9 +14,9 @@ import java.util.List;
 @Data
 public class MockServiceVo {
 
-    private long serviceId;
+    private long id;
 
-    private String service;
+    private String serviceName;
 
     private String simpleName;
 
@@ -28,24 +28,24 @@ public class MockServiceVo {
 
     private String createAt;
 
-    public MockServiceVo(long serviceId, String service) {
-        this.serviceId = serviceId;
-        this.service = service;
-        this.simpleName = service.substring(service.lastIndexOf(".") + 1);
+    public MockServiceVo(long id, String serviceName) {
+        this.id = id;
+        this.serviceName = serviceName;
+        this.simpleName = serviceName.substring(serviceName.lastIndexOf(".") + 1);
         this.mockMethodSize = 0L;
     }
 
-    public MockServiceVo(long serviceId, String service, String simpleName, long mockMethodSize) {
-        this.serviceId = serviceId;
-        this.service = service;
+    public MockServiceVo(long id, String serviceName, String simpleName, long mockMethodSize) {
+        this.id = id;
+        this.serviceName = serviceName;
         this.simpleName = simpleName;
         this.mockMethodSize = mockMethodSize;
     }
 
-    public MockServiceVo(long serviceId, String service, String simpleName, String version,
+    public MockServiceVo(long id, String serviceName, String simpleName, String version,
                          long metadataId, long mockMethodSize, Timestamp createAt) {
-        this.serviceId = serviceId;
-        this.service = service;
+        this.id = id;
+        this.serviceName = serviceName;
         this.simpleName = simpleName;
         this.version = version;
         this.metadataId = metadataId;

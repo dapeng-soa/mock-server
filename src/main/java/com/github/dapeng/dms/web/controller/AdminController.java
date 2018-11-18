@@ -73,6 +73,19 @@ public class AdminController {
         }
     }
 
+    @ApiOperation(value = "根据条件查询所有接口信息列表")
+    @PostMapping(value = "/listInterfacesName")
+    public Object listInterfacesName(@RequestBody Map<String, String> params) {
+        try {
+            String serviceName = CommonUtil.notNullRet(params.get("serviceName"), "请求接口列表时，服务全称必须指定.");
+            List<String> methodNames = dslMockService.listMockInterfacesName(serviceName);
+            return Resp.success(methodNames);
+        } catch (Exception e) {
+            log.error("listInterfacesName Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
     @ApiOperation(value = "根据条件 List Mock Express")
     @PostMapping(value = "/listMockExpress")
     public Object listMockExpress(@RequestBody QueryMockReq request) {
@@ -118,7 +131,7 @@ public class AdminController {
     @PostMapping("/createService")
     public Object createService(@RequestBody CreateServiceReq request) {
         try {
-            CommonUtil.notNull(request.getService(), "服务全称不能为空");
+            CommonUtil.notNull(request.getServiceName(), "服务全称不能为空");
             CommonUtil.notNull(request.getVersion(), "版本信息不能为空");
             dslMockService.createService(request);
             return Resp.success();

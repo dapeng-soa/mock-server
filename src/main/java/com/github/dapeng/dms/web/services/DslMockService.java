@@ -1,5 +1,6 @@
 package com.github.dapeng.dms.web.services;
 
+import com.github.dapeng.core.metadata.Method;
 import com.github.dapeng.dms.mock.matchers.validator.JsonSchemaValidator;
 import com.github.dapeng.dms.mock.metadata.MetaMemoryCache;
 import com.github.dapeng.dms.util.CommonUtil;
@@ -34,8 +35,9 @@ import org.springframework.stereotype.Service;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
 
@@ -131,6 +133,19 @@ public class DslMockService implements InitializingBean {
             return queryDsl.select(qService.serviceName).from(qService).where(qService.id.eq(id)).fetch();
         }
         return queryDsl.select(qService.serviceName).from(qService).fetch();
+    }
+
+    public List<String> listMockInterfacesName(String serviceName) {
+        Set<String> methodSet = new HashSet<>();
+        String metadataKey = CommonUtil.combine(serviceName, "1.0.0");
+        OptimizedMetadata.OptimizedService metaService = MetaMemoryCache.getFullServiceMap().get(metadataKey);
+        if (metaService != null) {
+            List<String> methodNameList = metaService.getMethodMap().values().stream().map(Method::getName).collect(Collectors.toList());
+            methodSet.addAll(methodNameList);
+        }
+        List<String> dbMethodList = queryDsl.select(qMethod.method).from(qMethod).where(qMethod.service.eq(serviceName)).fetch();
+        methodSet.addAll(dbMethodList);
+        return new ArrayList<>(methodSet);
     }
 
 
@@ -273,20 +288,20 @@ public class DslMockService implements InitializingBean {
     public void createService(CreateServiceReq request) {
         MockService mockService = queryDsl
                 .selectFrom(qService)
-                .where(qService.serviceName.eq(request.getService())
+                .where(qService.serviceName.eq(request.getServiceName())
                         .and(qService.version.eq(request.getVersion())))
                 .fetchFirst();
         if (mockService != null) {
             throw new MockException("新增的服务已存在,请勿重复创建相同名称的服务");
         }
-        Long metadataId = queryDsl.select(qMetadata.id).from(qMetadata).where(qMetadata.serviceName.eq(request.getService())).fetchFirst();
+        Long metadataId = queryDsl.select(qMetadata.id).from(qMetadata).where(qMetadata.serviceName.eq(request.getServiceName())).fetchFirst();
         if (metadataId == null) metadataId = 0L;
 
         MockService service;
         if (request.getSimpleName() != null) {
-            service = new MockService(request.getSimpleName(), request.getService(), request.getVersion(), metadataId);
+            service = new MockService(request.getSimpleName(), request.getServiceName(), request.getVersion(), metadataId);
         } else {
-            service = new MockService(request.getService(), request.getVersion(), metadataId);
+            service = new MockService(request.getServiceName(), request.getVersion(), metadataId);
         }
         serviceRepository.save(service);
     }
@@ -448,4 +463,6 @@ public class DslMockService implements InitializingBean {
             serviceRepository.save(existedService);
         }
     }
+
+
 }

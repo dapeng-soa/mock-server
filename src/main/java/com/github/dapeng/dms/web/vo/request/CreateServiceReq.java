@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 public class CreateServiceReq {
     private String simpleName;
-    private String service;
+    private String serviceName;
     private String version;
     private String metadata;
 

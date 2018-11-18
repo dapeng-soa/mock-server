@@ -1,6 +1,7 @@
 package com.github.dapeng.dms.web.controller;
 
 import com.github.dapeng.dms.mock.metadata.MetadataUtils;
+import com.github.dapeng.dms.mock.request.RequestType;
 import com.github.dapeng.dms.web.services.ApiService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -90,14 +91,43 @@ public class ApiController {
         //1.mock
         String mockJsonResp = apiService.doMock(serviceName, version, methodName, parameter, request);
         if (mockJsonResp != null) {
-            return mockJsonResp;
+            String resp = addType(mockJsonResp, RequestType.MOCK.getName());
+            log.info("response: {}", resp);
+            return resp;
         }
         //2.获取元数据的假数据信息
         String metadataResp = MetadataUtils.getServiceResponse(serviceName, methodName, version);
-
         if (metadataResp != null) {
-            return metadataResp;
+            String resp = addType(metadataResp, RequestType.MOCK.getName());
+            log.info("response: {}", resp);
+            return resp;
         }
         return "Internal Server Error,Mock和元数据信息均不存在";
     }
+
+    private String addType(String json, String type) {
+        StringBuilder builder = new StringBuilder();
+        String substring = json.substring(0, json.lastIndexOf("}"));
+        builder.append(substring);
+        builder.append("\"requestType\":\"").append(type).append("\"");
+        builder.append("}");
+        return builder.toString();
+    }
+
+    /*
+
+            {
+                   "responseCode": "Err-Common-002",
+                   "responseMsg": "没有查到相应数据",
+                   "success": "{}",
+                   "status": 0
+            }
+
+            {
+                 "success": 5924614,
+                 "status": 1
+            }
+
+
+     */
 }
