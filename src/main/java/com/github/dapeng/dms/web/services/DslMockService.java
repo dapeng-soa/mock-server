@@ -124,15 +124,18 @@ public class DslMockService implements InitializingBean {
 
     /**
      * 获取所有服务全称
-     *
-     * @return
      */
     public List<String> listMockServiceName(Long id) {
         if (id != null) {
             log.info("请求listMockServiceName id:{}", id);
             return queryDsl.select(qService.serviceName).from(qService).where(qService.id.eq(id)).fetch();
         }
-        return queryDsl.select(qService.serviceName).from(qService).fetch();
+        Set<String> serviceSet = MetaMemoryCache.getFullServiceMap().values().stream()
+                .map(s -> CommonUtil.combineMeta(s.getService().namespace, s.getService().name))
+                .collect(Collectors.toSet());
+        List<String> dbServiceList = queryDsl.select(qService.serviceName).from(qService).fetch();
+        serviceSet.addAll(dbServiceList);
+        return new ArrayList<>(serviceSet);
     }
 
     public List<String> listMockInterfacesName(String serviceName) {
