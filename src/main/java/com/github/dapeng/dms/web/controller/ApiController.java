@@ -1,8 +1,16 @@
 package com.github.dapeng.dms.web.controller;
 
+import com.github.dapeng.dms.mock.metadata.MetaMemoryCache;
 import com.github.dapeng.dms.mock.metadata.MetadataUtils;
-import com.github.dapeng.dms.mock.request.RequestType;
+import com.github.dapeng.dms.mock.request.ResponseType;
+import com.github.dapeng.dms.util.CommonUtil;
+import com.github.dapeng.dms.util.Pair;
+import com.github.dapeng.dms.util.Resp;
+import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.dms.web.services.ApiService;
+import com.github.dapeng.dms.web.vo.request.ApiSiteRequest;
+import com.github.dapeng.dms.web.vo.response.ApiSiteResponse;
+import com.github.dapeng.json.OptimizedMetadata;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -86,30 +94,66 @@ public class ApiController {
 
     }
 
+
+    /**
+     * 5. for api test
+     */
+    @ApiOperation(value = "Mock Server 测试站点")
+    @PostMapping(value = "/requestForApi")
+    public Object apiSite(@RequestBody ApiSiteRequest apiRequest, HttpServletRequest request) {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        try {
+            String serviceName = CommonUtil.notNullRet(apiRequest.getServiceName(), "API请求，服务名不能为空");
+            String methodName = CommonUtil.notNullRet(apiRequest.getMethodName(), "API请求，方法名不能为空");
+            String version = CommonUtil.notNullRet(apiRequest.getVersion(), "API请求，版本号不能为空");
+            String parameter = CommonUtil.notNullRet(apiRequest.getParameter(), "API请求，parameter不能为空");
+            Pair<ResponseType, String> responsePair = doProcessRequest(serviceName, version, methodName, parameter, request);
+            ApiSiteResponse response = new ApiSiteResponse(responsePair.getKey().getName(), responsePair.getValue());
+            return Resp.success(response);
+        } catch (Exception e) {
+            log.error("apiSite Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+
     private String processRequest(String serviceName, String version, String methodName,
                                   String parameter, HttpServletRequest request) {
+        Pair<ResponseType, String> responsePair = doProcessRequest(serviceName, version, methodName, parameter, request);
+        log.info("=== processRequest返回数据类型：{}", responsePair.getKey().getName());
+        return responsePair.getValue();
+    }
+
+    private Pair<ResponseType, String> doProcessRequest(String serviceName, String version, String methodName,
+                                                        String parameter, HttpServletRequest request) {
         //1.mock
         String mockJsonResp = apiService.doMock(serviceName, version, methodName, parameter, request);
         if (mockJsonResp != null) {
-            String resp = addType(mockJsonResp, RequestType.MOCK.getName());
-            log.info("response: {}", resp);
-            return resp;
+            String response = addType(mockJsonResp, ResponseType.MOCK.getName());
+            log.info("response: {}", response);
+            return new Pair<>(ResponseType.MOCK, response);
         }
         //2.获取元数据的假数据信息
+        OptimizedMetadata.OptimizedService service = MetaMemoryCache.getFullServiceMap().get(CommonUtil.combine(serviceName, version));
+        String mockMetadataResp = MetadataUtils.getMethodResponseJson(service, serviceName, version, methodName, ResponseType.STATIC_METADATA);
+        if (mockMetadataResp != null) {
+            log.info("response: {}", mockMetadataResp);
+            return new Pair<>(ResponseType.STATIC_METADATA, mockMetadataResp);
+        }
+        //3.获取元数据数据信息
         String metadataResp = MetadataUtils.getServiceResponse(serviceName, methodName, version);
         if (metadataResp != null) {
-            String resp = addType(metadataResp, RequestType.MOCK.getName());
-            log.info("response: {}", resp);
-            return resp;
+            log.info("response: {}", metadataResp);
+            return new Pair<>(ResponseType.REAL_DATA, metadataResp);
         }
-        return "Internal Server Error,Mock和元数据信息均不存在";
+        return new Pair<>(ResponseType.NO_DATA, "Internal Server Error,Mock和元数据信息均不存在");
     }
 
     private String addType(String json, String type) {
         StringBuilder builder = new StringBuilder();
         String substring = json.substring(0, json.lastIndexOf("}"));
         builder.append(substring);
-        builder.append("\"requestType\":\"").append(type).append("\"");
+        builder.append(",\"requestType\":\"").append(type).append("\"");
         builder.append("}");
         return builder.toString();
     }

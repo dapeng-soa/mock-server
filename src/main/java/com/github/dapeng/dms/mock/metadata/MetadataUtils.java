@@ -1,6 +1,7 @@
 package com.github.dapeng.dms.mock.metadata;
 
 import com.github.dapeng.core.metadata.*;
+import com.github.dapeng.dms.mock.request.ResponseType;
 import com.github.dapeng.json.OptimizedMetadata;
 import com.github.dapeng.openapi.cache.ServiceCache;
 import com.google.gson.ExclusionStrategy;
@@ -36,19 +37,24 @@ public class MetadataUtils {
         if (service == null) {
             return null;
         }
-        return getMethodResponseJson(service, serviceName, version, methodName);
+        return getMethodResponseJson(service, serviceName, version, methodName, ResponseType.REAL_DATA);
     }
 
 
-    private static String getMethodResponseJson(OptimizedMetadata.OptimizedService service, String serviceName, String version, String methodName) {
+    public static String getMethodResponseJson(OptimizedMetadata.OptimizedService service, String serviceName, String version, String methodName, ResponseType type) {
         Struct struct = getMethodResponse(service, methodName);
         if (struct == null) {
             return methodName + " of " + serviceName + ":" + version + " not found..........";
         } else {
             List<Field> parameters = struct.getFields();
-            Map<String, Object> jsonObjectMap = new HashMap<>();
-            jsonObjectMap.put("body", getSample(service, parameters));
-            return formatGson.toJson(jsonObjectMap);
+            Map<String, Object> successResponse = getSample(service, parameters);
+            /*if (successResponse.get("success") == null) {
+                successResponse.put("success", new HashMap<>());
+            }*/
+            successResponse.computeIfAbsent("success", k -> new HashMap<>());
+//            successResponse.putIfAbsent("success", new HashMap<>());
+            successResponse.put("responseType", type.getName());
+            return formatGson.toJson(successResponse);
         }
     }
 

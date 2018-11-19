@@ -37,7 +37,7 @@ public class LogAspect {
         Signature signature = pjp.getSignature();
         String name = signature.getName();
         String className = signature.getDeclaringType().getSimpleName();
-        log.info("=== 请求url:[{}], 请求方法name:[{}], 请求方法所属类Class:[{}] ===", requestUrl, name, className);
+        log.info("=== 请求url:[{}], 请求方法:[{}], 请求类:[{}] ===", requestUrl, name, className);
         return pjp.proceed();
     }
 
