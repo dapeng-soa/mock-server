@@ -313,6 +313,7 @@ public class DslMockService implements InitializingBean {
      * 创建 mock 规则
      */
     public void createMockInfo(CreateMockReq request) throws JSONException {
+        log.info(request.getMockExpress().trim());
         JsonSchemaValidator.matcher(request.getMockExpress());
         JsonSchemaValidator.matcher(request.getMockData());
         //convert
@@ -345,16 +346,31 @@ public class DslMockService implements InitializingBean {
     }
 
     /**
+     * 特殊处理
+     * @param mockExpress
+     * @return
+     */
+    private String convertMockExpress(String mockExpress) {
+        return "";
+    }
+
+    /**
      * update mock info
      */
-    public void updateMockInfo(UpdateMockReq request) {
+    public void updateMockInfo(UpdateMockReq request) throws JSONException {
+        JsonSchemaValidator.matcher(request.getMockExpress());
+        JsonSchemaValidator.matcher(request.getMockData());
+        String mockCompileJson = MockUtils.convertJsonValueToPatternJson(request.getMockExpress());
+
         JPAUpdateClause mockUpdate = queryDsl.update(qMock);
         if (request.getMockExpress() != null) {
             mockUpdate.set(qMock.mockExpress, request.getMockExpress());
+            mockUpdate.set(qMock.mockCompileJson, mockCompileJson);
         }
         if (request.getMockData() != null) {
             mockUpdate.set(qMock.data, request.getMockData());
         }
+
         mockUpdate.where(qMock.id.eq(request.getMockId())).execute();
     }
 

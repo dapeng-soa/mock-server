@@ -9,6 +9,7 @@ import com.github.dapeng.router.pattern.*;
 import com.github.dapeng.router.token.*;
 
 import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONParser;
 
@@ -22,6 +23,7 @@ import static com.github.dapeng.router.token.Token.*;
  * @author <a href=mailto:leihuazhe@gmail.com>maple</a>
  * @since 2018-11-05 1:49 PM
  */
+@Slf4j
 public class MockUtils {
     private static final Gson GSON = new Gson();
 
@@ -45,7 +47,11 @@ public class MockUtils {
         for (Map.Entry<String, Object> entry : stringObjectMap.entrySet()) {
             String k = entry.getKey();
             String expectedValue = entry.getValue().toString();
-            PatternWrapper wrapper = pattern(new RuleLexer(expectedValue));
+            //convertMockExpress
+            String convertExpress = convertMockExpress(expectedValue);
+
+
+            PatternWrapper wrapper = pattern(new RuleLexer(convertExpress));
             expressWrapperMap.put(k, wrapper);
         }
         return GSON.toJson(expressWrapperMap);
@@ -106,5 +112,22 @@ public class MockUtils {
             default:
                 throw new ParsingException("[UNKNOWN TOKEN]", "UnKnown token:" + token);
         }
+    }
+
+    /**
+     * 特殊处理
+     *
+     * @param value
+     * @return
+     */
+    private static String convertMockExpress(String value) {
+        if (value.charAt(0) == '@' && value.charAt(2) == '@') {
+            String content = value.substring(3);
+            char c = value.charAt(1);
+            String format = String.format("%s\"%s\"", c, content);
+            log.info("发现MockExpress特殊匹配规则，convert结果:{}", format);
+            return format;
+        }
+        return value;
     }
 }

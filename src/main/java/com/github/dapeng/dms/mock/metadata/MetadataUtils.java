@@ -54,6 +54,7 @@ public class MetadataUtils {
             successResponse.computeIfAbsent("success", k -> new HashMap<>());
 //            successResponse.putIfAbsent("success", new HashMap<>());
             successResponse.put("responseType", type.getName());
+            successResponse.put("status", 1);
             return formatGson.toJson(successResponse);
         }
     }
