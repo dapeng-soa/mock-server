@@ -286,7 +286,7 @@ public class MetadataService implements InitializingBean, ApplicationRunner {
             metaQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
         }
         MetaSearcher.Result queryResults = metaQuery.executeMethod();
-        List<MetaMethodVo> methodVoList = queryResults.methodList.stream().map(m -> new MetaMethodVo(m.getName(), m.getDoc())).collect(Collectors.toList());
+        List<MetaMethodVo> methodVoList = queryResults.methodList.stream().map(m -> new MetaMethodVo(metadata.getServiceName(), m.getName(), m.getDoc())).collect(Collectors.toList());
 
 
         log.info("Metadata Detail Method results size: {}", methodVoList.size());

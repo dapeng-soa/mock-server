@@ -13,6 +13,7 @@ import java.sql.Timestamp;
  */
 @Data
 public class MetaMethodVo {
+    private String serviceName;
 
     private String methodName;
 
@@ -20,14 +21,15 @@ public class MetaMethodVo {
 
     private String describe;
 
-    public MetaMethodVo(String methodName, String describe) {
+    public MetaMethodVo(String serviceName, String methodName, String describe) {
+        this.serviceName = serviceName;
         this.methodName = methodName;
         this.describe = describe;
     }
 
-    public MetaMethodVo(String methodName, String eventName, String describe) {
+    /*public MetaMethodVo(String methodName, String eventName, String describe) {
         this.methodName = methodName;
         this.eventName = eventName;
         this.describe = describe;
-    }
+    }*/
 }
