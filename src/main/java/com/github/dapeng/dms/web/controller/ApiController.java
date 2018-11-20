@@ -8,6 +8,7 @@ import com.github.dapeng.dms.util.Pair;
 import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.dms.web.services.ApiService;
+import com.github.dapeng.dms.web.vo.request.ApiSamplesRequest;
 import com.github.dapeng.dms.web.vo.request.ApiSiteRequest;
 import com.github.dapeng.dms.web.vo.response.ApiSiteResponse;
 import com.github.dapeng.json.OptimizedMetadata;
@@ -110,6 +111,27 @@ public class ApiController {
             Pair<ResponseType, String> responsePair = doProcessRequest(serviceName, version, methodName, parameter, request);
             ApiSiteResponse response = new ApiSiteResponse(responsePair.getKey().getName(), responsePair.getValue());
             return Resp.success(response);
+        } catch (Exception e) {
+            log.error("apiSite Error: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/getRequestSamples")
+    public Object getRequestSamples(@RequestBody ApiSamplesRequest samplesRequest) {
+        try {
+            String serviceName = CommonUtil.notNullRet(samplesRequest.getServiceName(), "API请求，服务名不能为空");
+            String methodName = CommonUtil.notNullRet(samplesRequest.getMethodName(), "API请求，方法名不能为空");
+            String version = CommonUtil.notNullRet(samplesRequest.getVersion(), "API请求，版本号不能为空");
+
+            //2.获取元数据的假数据信息
+            OptimizedMetadata.OptimizedService service = MetaMemoryCache.getFullServiceMap().get(CommonUtil.combine(serviceName, version));
+            String requestSamples = MetadataUtils.getMethodRequestJson(service, serviceName, version, methodName);
+            if (requestSamples != null) {
+                log.info("request samples: {}", requestSamples);
+                return Resp.success(requestSamples);
+            }
+            return Resp.success("{}");
         } catch (Exception e) {
             log.error("apiSite Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());

@@ -41,6 +41,23 @@ public class MetadataUtils {
     }
 
 
+    /**
+     * 获取请求 request 示意
+     */
+    public static String getMethodRequestJson(OptimizedMetadata.OptimizedService service, String serviceName, String version, String methodName) {
+        Struct struct = getMethodRequest(service, methodName);
+        if (struct == null) {
+            return methodName + " of " + serviceName + ":" + version + " not found..........";
+        } else {
+            List<Field> parameters = struct.getFields();
+            Map<String, Object> successRequest = getSample(service, parameters);
+            return formatGson.toJson(Collections.singletonMap("body", successRequest));
+        }
+    }
+
+    /**
+     * 获取返回结果示意
+     */
     public static String getMethodResponseJson(OptimizedMetadata.OptimizedService service, String serviceName, String version, String methodName, ResponseType type) {
         Struct struct = getMethodResponse(service, methodName);
         if (struct == null) {
@@ -57,6 +74,13 @@ public class MetadataUtils {
             successResponse.put("status", 1);
             return formatGson.toJson(successResponse);
         }
+    }
+
+
+    private static Struct getMethodRequest(OptimizedMetadata.OptimizedService service, String methodName) {
+        Map<String, Method> methodMap = service.getMethodMap();
+        Method method = methodMap.get(methodName);
+        return method != null ? method.getRequest() : null;
     }
 
     private static Struct getMethodResponse(OptimizedMetadata.OptimizedService service, String methodName) {

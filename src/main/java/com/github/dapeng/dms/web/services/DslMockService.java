@@ -358,7 +358,7 @@ public class DslMockService implements InitializingBean {
      * update mock info
      */
     public void updateMockInfo(UpdateMockReq request) throws JSONException {
-        JsonSchemaValidator.matcher(request.getMockExpress());
+//        JsonSchemaValidator.matcher(request.getMockExpress());
         JsonSchemaValidator.matcher(request.getMockData());
         String mockCompileJson = MockUtils.convertJsonValueToPatternJson(request.getMockExpress());
 

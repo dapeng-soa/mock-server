@@ -246,7 +246,7 @@ public class AdminController {
             dslMockService.deleteMockInfo(Long.valueOf(id));
             return Resp.success();
         } catch (Exception e) {
-            log.error("updateMockInfo Error: {}", e.getMessage());
+            log.error("deleteMockInfo Error: {}", e.getMessage());
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
     }
