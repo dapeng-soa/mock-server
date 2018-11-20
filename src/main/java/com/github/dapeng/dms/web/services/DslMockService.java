@@ -37,7 +37,6 @@ import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.github.dapeng.dms.util.Constants.DEFAULT_SORT_NUM;
 
@@ -346,7 +345,40 @@ public class DslMockService implements InitializingBean {
     }
 
     /**
+     * 一键创建MOCK规则
+     */
+    public long createMockOnce(CreateOnceReq request) {
+        String service = CommonUtil.notNullRet(request.getServiceName(), "一键创建规则时服务名不能为空");
+        String method = CommonUtil.notNullRet(request.getMethodName(), "一键创建规则时接口名不能为空");
+        //1.查询metadataId
+        MockMetadata metadata = queryDsl.selectFrom(qMetadata).where(qMetadata.serviceName.eq(service)).fetchFirst();
+        if (metadata == null) {
+            throw new MockException("指定的服务名和方法没有元数据信息，无法一键创建Mock规则");
+        }
+        long metaId = metadata.getId();
+
+        MockService mockService = queryDsl.selectFrom(qService).where(qService.serviceName.eq(service)).fetchFirst();
+        long serviceId;
+        if (mockService == null) {
+            MockService newMockService = serviceRepository.save(new MockService(service, "1.0.0", metaId));
+            serviceId = newMockService.getId();
+        } else {
+            serviceId = mockService.getId();
+        }
+        MockMethod mockMethod = queryDsl.selectFrom(qMethod).where(qMethod.method.eq(method)).fetchFirst();
+        long methodId;
+        if (mockMethod == null) {
+            MockMethod newMethod = methodRepository.save(new MockMethod(serviceId, service, method, "POST", "URL", new Timestamp(System.currentTimeMillis())));
+            methodId = newMethod.getId();
+        } else {
+            methodId = mockMethod.getId();
+        }
+        return methodId;
+    }
+
+    /**
      * 特殊处理
+     *
      * @param mockExpress
      * @return
      */

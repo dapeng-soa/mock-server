@@ -165,6 +165,18 @@ public class AdminController {
         }
     }
 
+    @ApiOperation(value = "一键创建Mock规则")
+    @PostMapping("/createMockOnce")
+    public Object createMockOnce(@RequestBody CreateOnceReq request) {
+        try {
+            long methodId = dslMockService.createMockOnce(request);
+            return Resp.success(methodId);
+        } catch (Exception e) {
+            log.error("createMockInfo: Json Schema 解析失败，请检查格式: {}", e.getMessage());
+            return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
+        }
+    }
+
     /**
      * update
      */
