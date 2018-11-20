@@ -1,7 +1,0 @@
-@charset "utf-8";
-@mixin round ($width,$bgColor){
-  width: $width;
-  height: $width;
-  border-radius: 50%;
-  background-color:$bgColor;
-}
