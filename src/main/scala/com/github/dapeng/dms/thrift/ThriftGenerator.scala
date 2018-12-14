@@ -1,8 +1,11 @@
 package com.github.dapeng.dms.thrift
 
 import java.io.{File, FilenameFilter}
+import java.util
+
 import com.github.dapeng.code.generator.MetadataGenerator
 import com.github.dapeng.code.parser.ThriftCodeParser
+import com.github.dapeng.core.metadata.Service
 
 /**
   *
@@ -16,7 +19,7 @@ object ThriftGenerator {
   }
 
 
-  def generateFiles(sourceFilePath: String, resourceTargetPath: String) = {
+  def generateFiles(sourceFilePath: String, resourceTargetPath: String): (util.List[Service], Array[String]) = {
     println("Welcome to use generate plugin")
 
     val inDir = sourceFilePath
