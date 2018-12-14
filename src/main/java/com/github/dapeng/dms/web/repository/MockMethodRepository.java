@@ -7,6 +7,4 @@ import com.github.dapeng.dms.web.entity.MockMethod;
  * @since 2018-10-30 1:52 PM
  */
 public interface MockMethodRepository extends BaseRepository<MockMethod> {
-
-
 }
