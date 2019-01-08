@@ -19,6 +19,18 @@ services:
     volumes:
       - "/data/logs/mock-server/:/mock-server/logs"
     labels:
-      - project.source=
+      - project.source=https://github.com/dapeng-soa/mock-server.git
+      - project.extra=public-image
+      - project.depends=
+
+  mockDms:
+    image: docker.today36524.com.cn:5000/basic/dapeng-mock-dms:2.1.1
+    container_name: mockDms
+    restart: on-failure:3
+    stop_grace_period: 30s
+    ports:
+      - "8997:80"
+    labels:
+      - project.source=https://github.com/dapeng-soa/vue-dms.git
       - project.extra=public-image
       - project.depends=
