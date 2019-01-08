@@ -43,8 +43,3 @@ public class Resp<T> {
     }
 
 }
-
-//{
-//   "success": "*******************收到的消息为： Hello(maple,None) HelloServiceImpl version=2.0.1",
-//   "status": 1
-//}

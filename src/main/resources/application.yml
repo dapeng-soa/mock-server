@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: ${DB_DEMO_URL}
-    password: ${DB_DEMO_PASSWD}
-    username: ${DB_DEMO_USER}
+    url: ${DB_MOCK_DB_URL}
+    password: ${DB_MOCK_DB_PASSWD}
+    username: ${DB_MOCK_DB_USER}
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
       minimum-idle: 5
@@ -40,12 +40,6 @@ spring:
 server:
   port: 9000
 
-
-dms:
-  first:
-    baseDir: /Users/maple/ideaspace/dapeng/dapeng-mock-server/first/
-
-
 soa:
   zookeeper:
     host: 127.0.0.1:2181
@@ -59,9 +53,3 @@ management:
     web:
       exposure:
         include: "*"
-#logging:
-#  level:
-#    org.apache.zookeeper: info
-#    com.zaxxer: info
-#    sun.rmi: info
-#    root: debug

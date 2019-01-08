@@ -1,0 +1,24 @@
+version: '2'
+services:
+  mockServer:
+    image: docker.today36524.com.cn:5000/basic/dapeng-mock-server:2.1.1
+    container_name: mockServer
+    restart: on-failure:3
+    stop_grace_period: 30s
+    environment:
+      - serviceName=mockServer
+      - TZ=CST-8
+      - dms_first_baseDir=/mock-server/matedata_files
+      - soa_zookeeper_host=127.0.0.1:2181
+      - DB_MOCK_DB_URL=jdbc:mysql://127.0.0.1:3306/mock_server?useUnicode=true&characterEncoding=utf8
+      - DB_MOCK_DB_USER=root
+      - DB_MOCK_DB_PASSWD=today-36524
+      - JAVA_OPTS= -Dname=configServer -Xms512M -Xmx512M -Xss256K -Dfile.encoding=UTF-8 -Dsun.jun.encoding=UTF-8
+    ports:
+      - "9879:9000"
+    volumes:
+      - "/data/logs/mock-server/:/mock-server/logs"
+    labels:
+      - project.source=
+      - project.extra=public-image
+      - project.depends=
