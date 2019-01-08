@@ -179,21 +179,4 @@ public class ApiController {
         builder.append("}");
         return builder.toString();
     }
-
-    /*
-
-            {
-                   "responseCode": "Err-Common-002",
-                   "responseMsg": "没有查到相应数据",
-                   "success": "{}",
-                   "status": 0
-            }
-
-            {
-                 "success": 5924614,
-                 "status": 1
-            }
-
-
-     */
 }

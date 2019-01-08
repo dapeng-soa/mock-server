@@ -10,6 +10,4 @@ import java.util.List;
  * @since 2018-10-30 1:52 PM
  */
 public interface MetadataRepository extends BaseRepository<MockMetadata> {
-
-    List<MockMetadata> findByServiceName(String serviceName);
 }

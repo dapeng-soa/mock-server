@@ -13,12 +13,4 @@ import java.util.List;
 public interface MockRepository extends BaseRepository<Mock> {
 
     List<Mock> findMockByMockKey(String name);
-
-
-    @Query(nativeQuery = true, value = "select * from mock_data where mock_key =?1  order by sort  desc limit 1")
-    Mock findMockByMockKeyOrderBySortDesc(String mockKey);
-
-
-    @Query(nativeQuery = true, value = "select * from mock_data where sort <?1  order by sort  desc limit 1")
-    Mock findMockBySortLimit(long sort);
 }
