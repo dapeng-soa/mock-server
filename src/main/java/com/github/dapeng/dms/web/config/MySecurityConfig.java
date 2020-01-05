@@ -24,6 +24,7 @@ public class MySecurityConfig extends WebSecurityConfigurerAdapter {
 
         http
                 .csrf().disable()
+                .cors().disable()
                 // 表单认证
                 .formLogin()
                 // 登录页
