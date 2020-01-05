@@ -65,6 +65,10 @@ public class DslMockService implements InitializingBean {
     private static final QMockMethod qMethod = QMockMethod.mockMethod;
     private static final QMock qMock = QMock.mock;
     private static final QMockMetadata qMetadata = QMockMetadata.mockMetadata;
+    //2020.1.4更新
+    private static final QVideo qVideo = QVideo.video;
+
+//    private static final QVi qMetadata = QMockMetadata.mockMetadata;
 
     public DslMockService(MockServiceRepository serviceRepository, MockMethodRepository methodRepository, MockRepository mockRepository, EntityManager entityManager) {
         this.serviceRepository = serviceRepository;
@@ -515,5 +519,40 @@ public class DslMockService implements InitializingBean {
         }
     }
 
+    public Resp queryVideoByCondition(QueryVideoRequest request) {
+        DmsPageReq dmsPage = request.getPageRequest();
+        //查询并返回结果集
+        JPAQuery<Video> videoQuery = queryDsl.selectFrom(qVideo);
 
+        if (StringUtils.isNotBlank(request.getVideoName())) {
+            videoQuery.where(qVideo.videoName.like("%" + request.getVideoName() + "%"));
+        }
+
+        if (dmsPage != null) {
+            videoQuery.offset(dmsPage.getStart()).limit(dmsPage.getLimit());
+        }
+        QueryResults<Video> results = videoQuery.orderBy(qVideo.createdAt.desc()).fetchResults();
+
+        // fetch data
+        List<Video> videoList = results.getResults();
+
+        if (dmsPage != null) {
+            DmsPageResp dmsPageResp = new DmsPageResp(dmsPage.getStart(), dmsPage.getLimit(), results.getTotal());
+            return Resp.success(new ListVideoResponse(videoList, dmsPageResp));
+        }
+        return Resp.success(new ListVideoResponse(videoList));
+    }
+
+
+    public Resp queryVideoById(QueryDetailVideoRequest request) {
+        //查询并返回结果集
+        Video video = queryDsl.selectFrom(qVideo)
+                .where(qVideo.id.eq(request.getVideoId()))
+                .fetchFirst();
+
+        if (video != null) {
+            return Resp.success(video);
+        }
+        return Resp.success(new Video("Unknown", "Unknown"));
+    }
 }

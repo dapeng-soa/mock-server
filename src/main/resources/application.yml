@@ -21,6 +21,10 @@ spring:
         format_sql: true
 
 
+
+#  spring.security.user.name=admin
+#  spring.security.user.password=123
+
   #    database: mysql
 
   devtools:
@@ -36,6 +40,10 @@ spring:
   servlet:
     multipart:
       max-file-size: 10MB
+  security:
+    user:
+      name: maple
+      password: 123456
 
 server:
   port: 9000
