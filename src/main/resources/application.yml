@@ -22,6 +22,7 @@ spring:
 
 
 
+
   #  spring.security.user.name=admin
   #  spring.security.user.password=123
 
@@ -30,13 +31,13 @@ spring:
   devtools:
     restart:
       enabled: true
-  mvc:
-    view:
-      prefix: /views/
-      suffix: .jsp
-    static-path-pattern: /**
-  resources:
-    static-locations: /static/
+    #  mvc:
+    #    view:
+    #      prefix: /views/
+    #      suffix: .jsp
+  #    static-path-pattern: /**
+  #  resources:
+  #    static-locations: /static/
   servlet:
     multipart:
       max-file-size: 10MB
@@ -44,9 +45,18 @@ spring:
     user:
       name: maple
       password: 123456
+  thymeleaf:
+    mode: LEGACYHTML5
+    encoding: utf-8
+    servlet:
+      content-type: text/html
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    enabled: true
 
 server:
-  port: 9000
+  port: 9002
   tomcat:
     remote-ip-header: X-Real-IP
     protocol-header: X-Forwarded-Proto
@@ -65,4 +75,5 @@ management:
     web:
       exposure:
         include: "*"
+
 

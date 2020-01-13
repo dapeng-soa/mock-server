@@ -20,8 +20,6 @@ public class MySecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest()
                 // 身份认证
                 .authenticated();*/
-
-
         http
                 .csrf().disable()
                 .cors().disable()

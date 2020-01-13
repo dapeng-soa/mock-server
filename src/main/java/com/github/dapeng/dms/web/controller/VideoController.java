@@ -7,8 +7,6 @@ import com.github.dapeng.dms.web.services.DslMockService;
 import com.github.dapeng.dms.web.util.AHCExecutor;
 import com.github.dapeng.dms.web.vo.request.QueryDetailVideoRequest;
 import com.github.dapeng.dms.web.vo.request.QueryVideoRequest;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -22,7 +20,6 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author Denim.leihz 2020-01-04 11:03 PM
  */
-@Api("Video数据")
 @RestController
 @Slf4j
 public class VideoController {
@@ -36,7 +33,6 @@ public class VideoController {
         this.dslMockService = dslMockService;
     }
 
-    @ApiOperation(value = "list Videos")
     @PostMapping("/admin/listVideos")
     public Object listVideoList(@RequestBody QueryVideoRequest requestVo) {
         try {
@@ -46,11 +42,15 @@ public class VideoController {
         }
     }
 
-    @ApiOperation(value = "QueryVideoById")
     @PostMapping("/out/queryVideoById")
     public Object queryVideoById(@RequestBody QueryDetailVideoRequest requestVo) {
         String remoteAddr = request.getRemoteAddr();
         //http://ip.taobao.com/service/getIpInfo.php?ip=115.159.41.97
+
+        if (remoteAddr.equals("115.159.41.97")) {
+            remoteAddr = getRealIp();
+        }
+
         String info = AHCExecutor.execute("http://ip.taobao.com/service/getIpInfo.php?ip=" + remoteAddr);
         log.info("请求视频 ID: {}, key: {}, from IP : {} ,message: \n {}",
                 requestVo.getVideoId(), requestVo.getKey(), remoteAddr, info);
@@ -75,6 +75,24 @@ public class VideoController {
         } catch (Exception e) {
             return Resp.error(RespUtil.MOCK_ERROR, e.getMessage());
         }
+    }
+
+    private String getRealIp() {
+        String ip = request.getHeader("X-Real-IP");
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Forwarded-For");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        log.info("GetRealIp ip: {}", ip);
+        return ip;
     }
 
 }
