@@ -3,7 +3,6 @@ package com.github.dapeng.dms.web.vo.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.dapeng.dms.web.entity.Video;
-import com.github.dapeng.dms.web.vo.MockServiceVo;
 import lombok.Data;
 
 import java.util.List;

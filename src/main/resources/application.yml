@@ -22,8 +22,8 @@ spring:
 
 
 
-#  spring.security.user.name=admin
-#  spring.security.user.password=123
+  #  spring.security.user.name=admin
+  #  spring.security.user.password=123
 
   #    database: mysql
 
@@ -47,6 +47,10 @@ spring:
 
 server:
   port: 9000
+  tomcat:
+    remote-ip-header: X-Real-IP
+    protocol-header: X-Forwarded-Proto
+  use-forward-headers: true
 
 soa:
   zookeeper:
@@ -61,3 +65,4 @@ management:
     web:
       exposure:
         include: "*"
+

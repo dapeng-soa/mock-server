@@ -222,6 +222,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.asynchttpclient</groupId>
+            <artifactId>async-http-client</artifactId>
+            <version>2.10.4</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -283,7 +289,7 @@
                 </executions>
             </plugin>
 
-            <plugin>
+           <!-- <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.8</version>
                 <executions>
@@ -291,7 +297,7 @@
                         <id>copy files</id>
                         <phase>package</phase>
                         <configuration>
-                            <!-- copy child's output files into target/docker -->
+                            &lt;!&ndash; copy child's output files into target/docker &ndash;&gt;
                             <tasks>
                                 <copy file="${project.build.directory}/dapeng-mock-server-2.1.1.jar"
                                       todir="${basedir}/docker/apps">
@@ -306,7 +312,7 @@
                         <id>clean up the docker folder</id>
                         <phase>clean</phase>
                         <configuration>
-                            <!-- delete folder under docker -->
+                            &lt;!&ndash; delete folder under docker &ndash;&gt;
                             <tasks>
                                 <delete dir="${basedir}/docker/apps"/>
                             </tasks>
@@ -316,9 +322,9 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
 
-            <plugin>
+            <!--<plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>0.4.10</version>
@@ -335,7 +341,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
 
         </plugins>
     </build>

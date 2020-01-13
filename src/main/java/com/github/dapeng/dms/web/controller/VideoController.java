@@ -4,16 +4,20 @@ import com.github.dapeng.dms.util.Resp;
 import com.github.dapeng.dms.util.RespUtil;
 import com.github.dapeng.dms.web.entity.Video;
 import com.github.dapeng.dms.web.services.DslMockService;
+import com.github.dapeng.dms.web.util.AHCExecutor;
 import com.github.dapeng.dms.web.vo.request.QueryDetailVideoRequest;
 import com.github.dapeng.dms.web.vo.request.QueryVideoRequest;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Denim.leihz 2020-01-04 11:03 PM
@@ -22,6 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Slf4j
 public class VideoController {
+
+    @Autowired
+    private HttpServletRequest request;
 
     private final DslMockService dslMockService;
 
@@ -42,7 +49,12 @@ public class VideoController {
     @ApiOperation(value = "QueryVideoById")
     @PostMapping("/out/queryVideoById")
     public Object queryVideoById(@RequestBody QueryDetailVideoRequest requestVo) {
-        log.info("请求视频 ID: {}, key: {}", requestVo.getVideoId(), requestVo.getKey());
+        String remoteAddr = request.getRemoteAddr();
+        //http://ip.taobao.com/service/getIpInfo.php?ip=115.159.41.97
+        String info = AHCExecutor.execute("http://ip.taobao.com/service/getIpInfo.php?ip=" + remoteAddr);
+        log.info("请求视频 ID: {}, key: {}, from IP : {} ,message: \n {}",
+                requestVo.getVideoId(), requestVo.getKey(), remoteAddr, info);
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && !authentication.getPrincipal().equals("anonymousUser")) {
             log.info("authentication: {}", authentication);

@@ -1,6 +1,5 @@
 package com.github.dapeng.dms.web.util;
 
-import com.github.dapeng.dms.web.controller.AdminController;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
