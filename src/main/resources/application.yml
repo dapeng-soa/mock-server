@@ -65,10 +65,3 @@ management:
 #    com.zaxxer: info
 #    sun.rmi: info
 #    root: debug
-
-knife4j:
-  markdowns: classpath:markdown/*
-  basic:
-    enable: false
-    username: maple
-    password: 123456
